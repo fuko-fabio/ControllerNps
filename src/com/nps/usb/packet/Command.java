@@ -1,6 +1,6 @@
 package com.nps.usb.packet;
 
-public enum PacketCommand {
+public enum Command {
 	
 	UNKNOWN((byte)0),
 	SEND_STREAM_PACKET((byte)1),
@@ -11,7 +11,7 @@ public enum PacketCommand {
 	
 	private byte value = 0;
 
-	PacketCommand(byte value) {
+	Command(byte value) {
 		this.value = value;
 	}
 
@@ -19,13 +19,13 @@ public enum PacketCommand {
 		return this.value;
 	}
 
-	public static PacketCommand getValue(int id) {
-		PacketCommand[] PacketCommands = PacketCommand.values();
+	public static Command getValue(int id) {
+		Command[] PacketCommands = Command.values();
 		for (int i = 0; i < PacketCommands.length; i++) {
 			if (PacketCommands[i].value() == id)
 				return PacketCommands[i];
 		}
-		return PacketCommand.UNKNOWN;
+		return Command.UNKNOWN;
 	}
 
 }

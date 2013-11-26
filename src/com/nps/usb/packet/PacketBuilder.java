@@ -6,18 +6,18 @@ package com.nps.usb.packet;
  */
 public class PacketBuilder {
 
-	PacketCommand command;
-	int size;
+	Command command;
+	short size;
 	int timeout = 0;
 	byte[] packetData;
 	
-	PacketBuilder (int packetSize){
+	PacketBuilder (short packetSize){
 		super();
 		this.size= packetSize;
 		this.packetData = new byte[this.size];
 	}
 
-	PacketBuilder withCommand(PacketCommand command) {
+	PacketBuilder withCommand(Command command) {
 		this.command = command;
 		return this;
 	}
@@ -34,5 +34,10 @@ public class PacketBuilder {
 	
 	Packet build() {
 		return new Packet(command, size, packetData, timeout);
+	}
+
+	public PacketBuilder withLastByte(byte data) {
+		this.packetData[size - 1] = data;
+		return this;
 	}
 }

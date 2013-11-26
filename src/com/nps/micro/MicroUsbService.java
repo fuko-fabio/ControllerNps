@@ -146,6 +146,12 @@ public class MicroUsbService extends Service {
 			//packetTransfer.setToStreamMode();
 			//Log.d(TAG, "USB communication switched to stream mode.");
 			packetTransfer.getStreamParameters();
+			packetTransfer.setStreamParameters((short)32, (short)96);
+			packetTransfer.switchToStreamMode();
+			packetTransfer.sendStreamPacket();
+			packetTransfer.receiveStreamPacket();
+			packetTransfer.switchToCommandMode();
+			packetTransfer.getStreamParameters();
 		} catch (UsbGateException e) {
 			Log.d(TAG, "Cannot open USB connection.");
 			sendMessageToUI(MSG_ERROR_OPEN_USB_GATE, e.getMessage());

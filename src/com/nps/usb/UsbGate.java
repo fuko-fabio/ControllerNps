@@ -98,7 +98,7 @@ public class UsbGate {
 	 * @throws IllegalAccessException if USB interface cannot be claimed
 	 */
 	public boolean send(Packet packet) throws IllegalAccessException {
-		if (packet.getTimeout() > 0) {
+		if (packet.getTimeout() == 0) {
 			return send(packet.toByteArray(), packet.getSize());
 		} else {
 			return send(packet.toByteArray(), packet.getSize(), packet.getTimeout());
@@ -138,29 +138,27 @@ public class UsbGate {
      * Read synchronous data from USB
      * 
      * @param buffer received data
-     * @param length buffer length
      * @return true for success or false for failure
      * @throws IllegalAccessException if USB interface cannot be claimed 
      */
-    public boolean receive(byte[] buffer, int length) throws IllegalAccessException {
+    public boolean receive(byte[] buffer) throws IllegalAccessException {
     	if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
     		throw new IllegalAccessException("USB interface cannot be claimed");
-        return mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, length, TIMEOUT) < 0 ? false : true;
+        return mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, buffer.length, TIMEOUT) < 0 ? false : true;
     }
 
     /**
      * Read synchronous data from USB with specified timeout
      * 
      * @param buffer received data
-     * @param length buffer length
      * @param timeout
      * @return true for success or false for failure
      * @throws IllegalAccessException if USB interface cannot be claimed 
      */
-    public boolean receive(byte[] buffer, int length, int timeout) throws IllegalAccessException {
+    public boolean receive(byte[] buffer, int timeout) throws IllegalAccessException {
     	if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
     		throw new IllegalAccessException("USB interface cannot be claimed");
-        return mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, length, timeout) < 0 ? false : true;
+        return mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, buffer.length, timeout) < 0 ? false : true;
     }
 
     /**
