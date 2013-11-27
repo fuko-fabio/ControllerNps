@@ -6,7 +6,6 @@ import android.os.Parcelable;
 /**
  * @author Norbert Pabian
  * www.npsoftware.pl
- *
  */
 public class DeviceIds implements Parcelable {
 	

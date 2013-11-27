@@ -5,6 +5,10 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 
+/**
+ * @author Norbert Pabian
+ * www.npsoftware.pl
+ */
 public class Dialogs {
 
 	private Dialogs() {

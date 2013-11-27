@@ -12,15 +12,13 @@ public class Packet {
 
 	Command command;
 	short size;
-	int timeout;
 	byte[] data;
 	
-	public Packet(Command command, short size, byte[] data, int timeout) {
+	public Packet(Command command, short size, byte[] data) {
 		super();
 		this.command = command;
 		this.size = size;
 		this.data = data;
-		this.timeout = timeout;
 	}
 	
 	public Command getCommand() {
@@ -37,14 +35,6 @@ public class Packet {
 
 	public void setSize(short size) {
 		this.size = size;
-	}
-	
-	public int getTimeout() {
-		return timeout;
-	}
-
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
 	}
 
 	public byte[] toByteArray(){
@@ -69,6 +59,7 @@ public class Packet {
 
 	public static byte[] bytesFromShort(short value) {
 		ByteBuffer buffer = ByteBuffer.allocate(2);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.putShort(value);
 		return buffer.array();
 	}

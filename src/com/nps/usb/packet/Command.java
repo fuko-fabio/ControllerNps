@@ -1,5 +1,9 @@
 package com.nps.usb.packet;
 
+/**
+ * @author Norbert Pabian
+ * www.npsoftware.pl
+ */
 public enum Command {
 	
 	UNKNOWN((byte)0),
@@ -19,7 +23,7 @@ public enum Command {
 		return this.value;
 	}
 
-	public static Command getValue(int id) {
+	public static Command getValue(byte id) {
 		Command[] PacketCommands = Command.values();
 		for (int i = 0; i < PacketCommands.length; i++) {
 			if (PacketCommands[i].value() == id)

@@ -2,70 +2,86 @@ package com.nps.usb.packet;
 
 import com.nps.usb.UsbGate;
 
-public class PacketTransfer {
+/**
+ * @author Norbert Pabian
+ * www.npsoftware.pl
+ */
+public class Microcontroller {
 
-	private CommunicationMode communicationMode = CommunicationMode.COMMAND;
+	private Mode mode = Mode.COMMAND;
 	private PacketSize packetSize = new PacketSize();
 	private UsbGate usbGate;
 
-	public PacketTransfer(UsbGate usbGate) {
+	public Microcontroller(UsbGate usbGate) {
 		this.usbGate = usbGate;
 	}
 
-	public void getStreamParameters() throws PacketTransferException {
+	public void getStreamParameters() throws MicrocontrollerException {
+		if(mode == Mode.STREAM) {
+			throw new MicrocontrollerException("Cannot read stream parameters. Current communication mode is 'STREAM'");
+		}
 		Packet packet = new PacketBuilder(
-				packetSize.getStreamOutSize())
+				packetSize.getDefaultStreamOutSize())
 				.withCommand(Command.GET_STREAM_PARAMETERS)
 				.withLastByte((byte) 'a').build();
-		byte[] inputBuffer = getInputBuffer();
+		byte[] inputBuffer = new byte[packetSize.getDefaultStreamInSize()];
 		try {
 			this.usbGate.send(packet);
 			this.usbGate.receive(inputBuffer);
-			updateTransferParameters(inputBuffer);
+			updatePacketSize(inputBuffer);
 		} catch (IllegalAccessException e) {
-			throw new PacketTransferException("Cannot read stream parameters cause: " + e.getMessage());
+			throw new MicrocontrollerException("Cannot read stream parameters cause: " + e.getMessage());
 		}
 	}
 
-	public void setStreamParameters(short streamOutSize, short streamInSize) throws PacketTransferException {
+	public void setStreamParameters(short streamOutSize, short streamInSize) throws MicrocontrollerException {
+		if(mode == Mode.STREAM) {
+			throw new MicrocontrollerException("Cannot set stream parameters. Current communication mode is 'STREAM'");
+		}
 		byte[] streamOutSizeBytes = Packet.bytesFromShort(streamOutSize);
 		byte[] streamInSizeBytes = Packet.bytesFromShort(streamInSize);
 		Packet packet = new PacketBuilder(
-				packetSize.getStreamOutSize())
+				packetSize.getDefaultStreamOutSize())
 				.withCommand(Command.SET_STREAM_PARAMETERS)
 				.withByte(8, streamOutSizeBytes[0])
 				.withByte(9, streamOutSizeBytes[1])
 				.withByte(10, streamInSizeBytes[0])
 				.withByte(11, streamInSizeBytes[1]).build();
-		byte[] inputBuffer = getInputBuffer();
+		byte[] inputBuffer = new byte[packetSize.getDefaultStreamInSize()];
 		try {
 			this.usbGate.send(packet);
 			this.usbGate.receive(inputBuffer);
-			updateTransferParameters(inputBuffer);
+			updatePacketSize(inputBuffer);
 		} catch (IllegalAccessException e) {
-			throw new PacketTransferException(
+			throw new MicrocontrollerException(
 					"Cannot set stream parameters cause: " + e.getMessage());
 		}
 	}
 
-	public void sendStreamPacket() throws PacketTransferException {
+	public void sendStreamPacket() throws MicrocontrollerException {
+		if(mode == Mode.COMMAND) {
+			throw new MicrocontrollerException("Cannot seant stream packet. Current communication mode is 'COMMAND'");
+		}
 		Packet packet = new PacketBuilder(packetSize.getStreamOutSize())
 				.withCommand(Command.SEND_STREAM_PACKET)
 				.withLastByte((byte) 'a').build();
 		try {
 			this.usbGate.send(packet);
 		} catch (IllegalAccessException e) {
-			throw new PacketTransferException(
+			throw new MicrocontrollerException(
 					"Cannot send stream packet cause: " + e.getMessage());
 		}
 	}
 	
-	public byte[] receiveStreamPacket() throws PacketTransferException {
-		byte[] inputBuffer = getInputBuffer();
+	public byte[] receiveStreamPacket() throws MicrocontrollerException {
+		if(mode == Mode.COMMAND) {
+			throw new MicrocontrollerException("Cannot read stream packet. Current communication mode is 'COMMAND'");
+		}
+		byte[] inputBuffer = new byte[packetSize.getStreamInSize()];
 		try {
 			this.usbGate.receive(inputBuffer);
 		} catch (IllegalAccessException e) {
-			throw new PacketTransferException(
+			throw new MicrocontrollerException(
 					"Cannot read stream packet cause: " + e.getMessage());
 		}
 		return inputBuffer;
@@ -74,9 +90,12 @@ public class PacketTransfer {
 	/**
 	 * Switch communication to command mode
 	 * 
-	 * @throws PacketTransferException
+	 * @throws MicrocontrollerException
 	 */
-	public void switchToCommandMode() throws PacketTransferException {
+	public void switchToCommandMode() throws MicrocontrollerException {
+		if(mode == Mode.COMMAND) {
+			return;
+		}
 		byte[] streamOutSizeBytes = Packet.bytesFromShort(packetSize.getDefaultStreamOutSize());
 		byte[] streamInSizeBytes = Packet.bytesFromShort(packetSize.getDefaultStreamInSize());
 		Packet packet = new PacketBuilder(
@@ -91,32 +110,35 @@ public class PacketTransfer {
 		try {
 			this.usbGate.send(packet);
 			this.usbGate.receive(inputBuffer);
-			updateTransferParameters(inputBuffer);
+			updatePacketSize(inputBuffer);
 		} catch (IllegalAccessException e) {
-			throw new PacketTransferException(
+			throw new MicrocontrollerException(
 					"Cannot switch to command mode cause: " + e.getMessage());
 		}
-		communicationMode = CommunicationMode.COMMAND;
+		mode = Mode.COMMAND;
 	}
 	
 	/**
 	 * Switch communication to stream mode
 	 * 
-	 * @throws PacketTransferException
+	 * @throws MicrocontrollerException
 	 */
-	public void switchToStreamMode() throws PacketTransferException {
+	public void switchToStreamMode() throws MicrocontrollerException {
+		if(mode == Mode.STREAM) {
+			return;
+		}
 		Packet packet = new PacketBuilder(
-				packetSize.getStreamOutSize())
+				packetSize.getDefaultStreamOutSize())
 				.withCommand(Command.SWITCH_TO_STREAM)
 				.withLastByte((byte) 'a').build();
-		byte[] inputBuffer = getInputBuffer();
+		byte[] inputBuffer = new byte[packetSize.getStreamInSize()];
 		try {
 			this.usbGate.send(packet);
-			this.usbGate.receive(inputBuffer, this.packetSize.getStreamInSize());
+			this.usbGate.receive(inputBuffer);
 		} catch (IllegalAccessException e) {
-			throw new PacketTransferException("Cannot switch to stream mode: " + e.getMessage());
+			throw new MicrocontrollerException("Cannot switch to stream mode: " + e.getMessage());
 		}
-		communicationMode = CommunicationMode.STREAM;
+		mode = Mode.STREAM;
 	}
 
 	/**
@@ -124,15 +146,11 @@ public class PacketTransfer {
 	 * 
 	 * @return communication mode
 	 */
-	public CommunicationMode getCommunicationMode() {
-		return communicationMode;
+	public Mode getMode() {
+		return mode;
 	}
 
-	private byte[] getInputBuffer() {
-		return new byte[packetSize.getStreamInSize()];
-	}
-
-	private void updateTransferParameters(byte[] inputBuffer) {
+	private void updatePacketSize(byte[] inputBuffer) {
 		packetSize.setStreamOutSize(
 				Packet.shortFromBytes(inputBuffer[16], inputBuffer[17]));
 		packetSize.setStreamInSize(

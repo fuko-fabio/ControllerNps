@@ -22,7 +22,8 @@
     <string name="setup_usb">Setup USB device</string>
     <string name="service_name">nps usb service</string>
     <string name="local_service_notification">Usb service</string>
-    <string name="local_service_started">Usb service started</string>
+    <string name="local_service_started">NPS Usb service started</string>
+    <string name="local_service_running">NPS Usb service is running</string>
     <string name="digital_io">Digital Inputs Outputs</string>
     <string name="digital_on1">On 1</string>
     <string name="digital_off1">Off 1</string>
@@ -42,7 +43,14 @@
     <string name="software_version">Software version: </string>
     <string name="software_date_built">Date built: </string>
     <string name="software_author">Author: Norbert Pabian</string>
+    <string name="repeats">Number of repeats</string>
+    <string name="out_size">Out packet size</string>
+    <string name="in_size">In packet size</string>
+    <string name="arhitecture">Arhitecture</string>
+    <string name="save_logs">Save speed logs</string>
+    <string name="run">Run</string>
+    <string name="select">Select</string>
+    <string name="device">Device</string>
     
     
-
 </resources>

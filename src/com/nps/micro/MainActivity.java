@@ -3,8 +3,6 @@ package com.nps.micro;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import com.nps.data.ExternalStorageException;
-import com.nps.data.SpeedLogger;
 import com.nps.usb.DeviceIds;
 
 import android.app.Activity;
@@ -28,25 +26,38 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
 import android.widget.Toast;
 
+/**
+ * @author Norbert Pabian
+ * www.npsoftware.pl
+ */
 public class MainActivity extends FragmentActivity {
 
     private static final String ACTION_USB_PERMISSION = "com.nps.micro.USB_PERMISSION";
     private static final String TAG = "MainActivity";
-
-    private MicroUsbService microUsbService;
+    
+    private DetailsFragmentModel model = new DetailsFragmentModel();
+    private UsbService microUsbService;
 
     private Intent usbServiceIntent;
     private Messenger messengerService;
     private boolean isDeviceAvailable = false;
     private boolean isBoundToService;
-    //private DeviceIds deviceIds = new DeviceIds("Olimex sam3", 24857, 1003);
+    // private DeviceIds deviceIds = new DeviceIds("Olimex sam3", 24857, 1003);
     private DeviceIds deviceIds = new DeviceIds("Olimex sam7", 24870, 1003);
 
     private BroadcastReceiver usbDisconnectedBroadcastReceiver;
@@ -103,11 +114,11 @@ public class MainActivity extends FragmentActivity {
             // interact with the service. Because we have bound to a explicit
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
-            microUsbService = ((MicroUsbService.LocalBinder) service).getService();
+            microUsbService = ((UsbService.LocalBinder) service).getService();
 
-            messengerService = new Messenger(((MicroUsbService.LocalBinder) service).getMessenger());
+            messengerService = new Messenger(((UsbService.LocalBinder) service).getMessenger());
             try {
-                Message msg = Message.obtain(null, MicroUsbService.MSG_REGISTER_CLIENT);
+                Message msg = Message.obtain(null, UsbService.MSG_REGISTER_CLIENT);
                 msg.replyTo = messengerService;
                 messengerService.send(msg);
             } catch (RemoteException e) {
@@ -146,13 +157,6 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
-        SpeedLogger dl = new SpeedLogger(getApplicationContext());
-        try {
-			dl.saveLogs("Jakies tam logi", "sam3s");
-		} catch (ExternalStorageException e) {
-			// TODO Auto-generated catch block
-		}
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the app.
@@ -161,11 +165,69 @@ public class MainActivity extends FragmentActivity {
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-        
+
         usbDisconnectedBroadcastReceiver = new UsbDisconnectedBroadcastReceiver(this);
         registerReceiver(usbDisconnectedBroadcastReceiver, new IntentFilter(
                 UsbManager.ACTION_USB_DEVICE_DETACHED));
         initUsbService();
+        
+      EditText repeatsInput = (EditText) findViewById(R.id.repeatsInput);
+      repeatsInput.setText(String.valueOf(model.getNumberOfRepeats()));
+      repeatsInput.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+              model.setNumberOfRepeats(Integer.valueOf(s.toString()));
+          }
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+          }
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }});
+
+      EditText outSizeInput = (EditText) findViewById(R.id.packetOutSizeInput);
+      outSizeInput.setText(String.valueOf(model.getPacketOutSize()));
+      outSizeInput.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+              model.setPacketOutSize(Short.valueOf(s.toString()));
+          }
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+          }
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }});
+
+      EditText inSizeInput = (EditText) findViewById(R.id.packetInSizeInput);
+      inSizeInput.setText(String.valueOf(model.getPacketInSize()));
+      inSizeInput.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+              model.setPacketInSize(Short.valueOf(s.toString()));
+          }
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+          }
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }});
+
+      CheckBox saveLogsCheckBox = (CheckBox) findViewById(R.id.saveLogsCheckBox);
+      saveLogsCheckBox.setSelected(model.isSaveLogs());
+      saveLogsCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+          @Override
+          public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+              model.setSaveLogs(isChecked);
+          }});
+      
+      Button runButton = (Button) findViewById(R.id.runButton);
+      runButton.setOnClickListener(new OnClickListener(){
+
+          @Override
+          public void onClick(View v) {
+              model.isSaveLogs();
+          }});
     }
 
     private void initUsbService() {
@@ -176,7 +238,7 @@ public class MainActivity extends FragmentActivity {
     private void startUsbService(UsbDevice device) {
         isDeviceAvailable = true;
         Log.d(TAG, "Setup USB service.");
-        usbServiceIntent = new Intent(this, MicroUsbService.class);
+        usbServiceIntent = new Intent(this, UsbService.class);
         usbServiceIntent.putExtra("device", device);
         Log.d(TAG, "Starting nps usb service...");
         startService(usbServiceIntent);
@@ -260,7 +322,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void stopUsbService() {
-        if (MicroUsbService.isRunning() && usbServiceIntent != null) {
+        if (UsbService.isRunning() && usbServiceIntent != null) {
             stopService(usbServiceIntent);
         }
         if (usbPermissionBroadcastReceiver != null) {
@@ -279,7 +341,7 @@ public class MainActivity extends FragmentActivity {
             // then now is the time to unregister.
             if (messengerService != null) {
                 try {
-                    Message msg = Message.obtain(null, MicroUsbService.MSG_UNREGISTER_CLIENT);
+                    Message msg = Message.obtain(null, UsbService.MSG_UNREGISTER_CLIENT);
                     msg.replyTo = messengerService;
                     messengerService.send(msg);
                 } catch (RemoteException e) {
@@ -297,7 +359,7 @@ public class MainActivity extends FragmentActivity {
     private void bindToUsbService() {
         if (!isBoundToService && isDeviceAvailable) {
             Log.d(TAG, "Binding nps usb service...");
-            isBoundToService = bindService(new Intent(this, MicroUsbService.class),
+            isBoundToService = bindService(new Intent(this, UsbService.class),
                     usbServiceConnection, Context.BIND_AUTO_CREATE);
         }
     }
@@ -309,7 +371,7 @@ public class MainActivity extends FragmentActivity {
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
             Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
         }
     }
@@ -327,16 +389,11 @@ public class MainActivity extends FragmentActivity {
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        private Fragment[] fragments = new Fragment[] {
-                new HomeSectionFragment(),
-                new DetailsSectionFragment(),
-                new GraphSectionFragment() };
-        
-        private CharSequence[] titles = new CharSequence[] {
-                getString(R.string.title_home),
-                getString(R.string.title_details),
-                getString(R.string.title_graph)
-        };
+        private Fragment[] fragments = new Fragment[] { new HomeSectionFragment(),
+                new DetailsSectionFragment(), new GraphSectionFragment() };
+
+        private CharSequence[] titles = new CharSequence[] { getString(R.string.title_home),
+                getString(R.string.title_details), getString(R.string.title_graph) };
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -358,16 +415,36 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-    public static class HomeSectionFragment extends Fragment {
+    public static class HomeSectionFragment extends BaseSectionFragment {
 
         public HomeSectionFragment() {
+            this.layout = R.layout.home;
         }
+    }
+
+    public static class DetailsSectionFragment extends BaseSectionFragment {
+        public DetailsSectionFragment() {
+            this.layout = R.layout.details;
+        }
+    }
+
+    public static class GraphSectionFragment extends BaseSectionFragment {
+
+        public GraphSectionFragment() {
+            this.layout = R.layout.graph;
+        }
+    }
+
+    public static class BaseSectionFragment extends Fragment {
+
+        protected int layout;
 
         @Override
         public void onConfigurationChanged(Configuration newConfig) {
             super.onConfigurationChanged(newConfig);
-            LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View newView = inflater.inflate(R.layout.home, null);
+            LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(
+                    Context.LAYOUT_INFLATER_SERVICE);
+            View newView = inflater.inflate(layout, null);
             ViewGroup rootView = (ViewGroup) getView();
             rootView.removeAllViews();
             rootView.addView(newView);
@@ -376,35 +453,8 @@ public class MainActivity extends FragmentActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.home, container, false);
+            View rootView = inflater.inflate(layout, container, false);
             return rootView;
         }
     }
-    
-    public static class DetailsSectionFragment extends Fragment {
-
-        public DetailsSectionFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.details, container, false);
-            return rootView;
-        }
-    }
-    
-    public static class GraphSectionFragment extends Fragment {
-
-        public GraphSectionFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.graph, container, false);
-            return rootView;
-        }
-    }
-
 }

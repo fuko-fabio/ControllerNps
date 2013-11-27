@@ -3,7 +3,6 @@ package com.nps.usb.packet;
 /**
  * @author Norbert Pabian
  * www.npsoftware.pl
- *
  */
 public class PacketSize {
 	private static final short defaultStreamInSize = 48;

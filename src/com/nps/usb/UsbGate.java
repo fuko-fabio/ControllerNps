@@ -2,9 +2,6 @@ package com.nps.usb;
 
 import java.nio.ByteBuffer;
 
-
-
-
 import com.nps.usb.packet.Packet;
 
 import android.hardware.usb.UsbConstants;
@@ -16,9 +13,7 @@ import android.hardware.usb.UsbManager;
 import android.hardware.usb.UsbRequest;
 
 /**
- * @author Norbert Pabian
- * www.npsoftware.pl
- * 
+ * @author Norbert Pabian www.npsoftware.pl
  */
 public class UsbGate {
 
@@ -36,102 +31,99 @@ public class UsbGate {
     /**
      * @param device USB device object
      * @throws IllegalArgumentException
-     * @throws UsbGateException 
+     * @throws UsbGateException
      */
-    public UsbGate(UsbManager usbManager, UsbDevice device) throws IllegalArgumentException, UsbGateException {
+    public UsbGate(UsbManager usbManager, UsbDevice device) throws IllegalArgumentException,
+            UsbGateException {
         if (device == null) {
             throw new IllegalArgumentException("Device not found!");
         }
         if (usbManager == null) {
             throw new IllegalArgumentException("USB manager not found!");
         }
+        mUsbManager = usbManager;
 
-		mUsbManager = usbManager;
-		mUsbDevice = device;
+        for (int i = 0; i < device.getInterfaceCount(); i++) {
+            if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA) {
+                mUsbInterface = device.getInterface(i);
+            }
+        }
+        if (mUsbInterface == null) {
+            throw new UsbGateException("CDC Usb interface not found!");
+        }
 
-		for (int i = 0; i < device.getInterfaceCount(); i++) {
-			if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA) {
-				mUsbInterface = device.getInterface(i);
-			}
-		}
-		for (int i = 0; i < mUsbInterface.getEndpointCount(); i++) {
-			UsbEndpoint endpoint = mUsbInterface.getEndpoint(i);
-			if (endpoint.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK) {
-				if (endpoint.getDirection() == UsbConstants.USB_DIR_IN) {
-					mUsbEndpointIn = endpoint;
-				} else {
-					mUsbEndpointOut = endpoint;
-				}
-			}
-		}
-		if (mUsbEndpointIn == null || mUsbEndpointOut == null) {
-			throw new UsbGateException("Endpoints not found!");
-		}
-		mUsbDevice = device;
+        for (int i = 0; i < mUsbInterface.getEndpointCount(); i++) {
+            UsbEndpoint endpoint = mUsbInterface.getEndpoint(i);
+            if (endpoint.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK) {
+                if (endpoint.getDirection() == UsbConstants.USB_DIR_IN) {
+                    mUsbEndpointIn = endpoint;
+                } else {
+                    mUsbEndpointOut = endpoint;
+                }
+            }
+        }
+        if (mUsbEndpointIn == null || mUsbEndpointOut == null) {
+            throw new UsbGateException("Endpoints not found!");
+        }
+        mUsbDevice = device;
     }
-    
+
     /**
      * Create connection with USB device
-     * @throws SecurityException if connection cannot be established
-     * @throws UsbGateException 
+     * 
+     * @throws UsbGateException if connection cannot be established
      */
     public void createConnection() throws UsbGateException {
-    	mUsbConnection = mUsbManager.openDevice(mUsbDevice);
-        if(mUsbConnection != null)
-        	connected = true;
+        mUsbConnection = mUsbManager.openDevice(mUsbDevice);
+        if (mUsbConnection != null)
+            connected = true;
         else
-        	throw new UsbGateException("Cannot get connection");
+            throw new UsbGateException("Cannot get connection");
     }
-    
+
     /**
      * @return true if connection with usb device is opened
      */
-    public boolean isConnected(){
-    	return connected;
+    public boolean isConnected() {
+        return connected;
     }
 
-	/**
-	 * Send synchronous data via USB
-	 *
-	 * @param packet generated packet to sent
-	 * @return true for success or false for failure
-	 * @throws IllegalAccessException if USB interface cannot be claimed
-	 */
-	public boolean send(Packet packet) throws IllegalAccessException {
-		if (packet.getTimeout() == 0) {
-			return send(packet.toByteArray(), packet.getSize());
-		} else {
-			return send(packet.toByteArray(), packet.getSize(), packet.getTimeout());
-		}
-	}
+    /**
+     * Send synchronous data via USB
+     * 
+     * @param packet generated packet to sent
+     * @return true for success or false for failure
+     * @throws IllegalAccessException if USB interface cannot be claimed
+     */
+    public boolean send(Packet packet) throws IllegalAccessException {
+        return send(packet.toByteArray());
+    }
 
     /**
      * Send synchronous data via USB
      * 
      * @param buffer data to send
-     * @param length buffer length
      * @return true for success or false for failure
      * @throws IllegalAccessException if USB interface cannot be claimed
      */
-    public boolean send(byte[] buffer, int length) throws IllegalAccessException {
-    	if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
-    		throw new IllegalAccessException("USB interface cannot be claimed");
-        return mUsbConnection.bulkTransfer(mUsbEndpointOut, buffer, length, TIMEOUT) < 0 ? false : true;
+    public boolean send(byte[] buffer) throws IllegalAccessException {
+        if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
+            throw new IllegalAccessException("USB interface cannot be claimed");
+        return mUsbConnection.bulkTransfer(mUsbEndpointOut, buffer, buffer.length, TIMEOUT) < 0 ? false : true;
     }
 
     /**
      * Send synchronous data via USB with specified timeout
      * 
      * @param buffer data to send
-     * @param length buffer length
      * @param timeout
      * @return true for success or false for failure
      * @throws IllegalAccessException if USB interface cannot be claimed
      */
-    public boolean send(byte[] buffer, int length, int timeout) throws IllegalAccessException {
-    	if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
-    		throw new IllegalAccessException("USB interface cannot be claimed");
-        return mUsbConnection.bulkTransfer(mUsbEndpointOut, buffer, length, timeout) < 0 ? false : true;
+    public boolean send(byte[] buffer, int timeout) throws IllegalAccessException {
+        if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
+            throw new IllegalAccessException("USB interface cannot be claimed");
+        return mUsbConnection.bulkTransfer(mUsbEndpointOut, buffer, buffer.length, timeout) < 0 ? false : true;
     }
 
     /**
@@ -139,11 +131,11 @@ public class UsbGate {
      * 
      * @param buffer received data
      * @return true for success or false for failure
-     * @throws IllegalAccessException if USB interface cannot be claimed 
+     * @throws IllegalAccessException  if USB interface cannot be claimed
      */
     public boolean receive(byte[] buffer) throws IllegalAccessException {
-    	if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
-    		throw new IllegalAccessException("USB interface cannot be claimed");
+        if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
+            throw new IllegalAccessException("USB interface cannot be claimed");
         return mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, buffer.length, TIMEOUT) < 0 ? false : true;
     }
 
@@ -153,11 +145,11 @@ public class UsbGate {
      * @param buffer received data
      * @param timeout
      * @return true for success or false for failure
-     * @throws IllegalAccessException if USB interface cannot be claimed 
+     * @throws IllegalAccessException if USB interface cannot be claimed
      */
     public boolean receive(byte[] buffer, int timeout) throws IllegalAccessException {
-    	if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
-    		throw new IllegalAccessException("USB interface cannot be claimed");
+        if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
+            throw new IllegalAccessException("USB interface cannot be claimed");
         return mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, buffer.length, timeout) < 0 ? false : true;
     }
 
@@ -166,11 +158,11 @@ public class UsbGate {
      * 
      * @param buffer data to send
      * @return true if the operation succeeded
-     * @throws IllegalAccessException if the USB request was not opened or  if USB interface cannot be claimed
+     * @throws IllegalAccessException if the USB request was not opened or if USB interface cannot be claimed
      */
     public boolean sendAsync(byte[] buffer) throws IllegalAccessException {
-    	if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
-    		throw new IllegalAccessException("USB interface cannot be claimed ");
+        if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
+            throw new IllegalAccessException("USB interface cannot be claimed ");
         if (!mUsbRequest.initialize(mUsbConnection, mUsbEndpointOut))
             throw new IllegalAccessException("USB request cannot be opened");
 
@@ -186,11 +178,11 @@ public class UsbGate {
      * 
      * @param buffer received data
      * @return true if the operation succeeded
-     * @throws IllegalAccessException if the USB request was not opened or  if USB interface cannot be claimed
+     * @throws IllegalAccessException if the USB request was not opened or if USB interface cannot be claimed
      */
     public boolean receiveAsync(byte[] buffer) throws IllegalAccessException {
-    	if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
-    		throw new IllegalAccessException("USB interface cannot be claimed ");
+        if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
+            throw new IllegalAccessException("USB interface cannot be claimed ");
         if (!mUsbRequest.initialize(mUsbConnection, mUsbEndpointIn))
             throw new IllegalAccessException("USB request cannot be opened");
 
