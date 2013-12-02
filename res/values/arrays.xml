@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="repeats_array">
+        <item>10</item>
+        <item>100</item>
+        <item>1000</item>
+        <item>10000</item>
+        <item>100000</item>
+    </string-array>
+
+    <string-array name="out_size_array">
+        <item>16</item>
+        <item>32</item>
+        <item>64</item>
+        <item>128</item>
+        <item>246</item>
+        <item>512</item>
+        <item>1024</item>
+        <item>2048</item>
+    </string-array>
+
+    <string-array name="in_size_array">
+        <item>48</item>
+        <item>100</item>
+        <item>200</item>
+        <item>500</item>
+        <item>750</item>
+        <item>1000</item>
+        <item>1250</item>
+        <item>1500</item>
+        <item>2000</item>
+        <item>2500</item>
+        <item>3000</item>
+        <item>3500</item>
+        <item>4000</item>
+        <item>4500</item>
+        <item>5000</item>
+        <item>5500</item>
+        <item>6000</item>
+        <item>6500</item>
+        <item>7000</item>
+        <item>7500</item>
+        <item>7950</item>
+    </string-array>
+
+    <string-array name="arhitecture_array">
+        <item>"Sequence Send Read Send Read"</item>
+        <item>"Sequence Send Send Read Read"</item>
+    </string-array>
+</resources>

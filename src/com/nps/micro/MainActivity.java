@@ -3,8 +3,6 @@ package com.nps.micro;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import com.nps.usb.DeviceIds;
-
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -26,20 +24,13 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.EditText;
 import android.widget.Toast;
+
+import com.nps.usb.DeviceIds;
+import com.nps.usb.UsbGateException;
+import com.nps.usb.packet.MicrocontrollerException;
 
 /**
  * @author Norbert Pabian
@@ -49,8 +40,7 @@ public class MainActivity extends FragmentActivity {
 
     private static final String ACTION_USB_PERMISSION = "com.nps.micro.USB_PERMISSION";
     private static final String TAG = "MainActivity";
-    
-    private DetailsFragmentModel model = new DetailsFragmentModel();
+
     private UsbService microUsbService;
 
     private Intent usbServiceIntent;
@@ -96,6 +86,7 @@ public class MainActivity extends FragmentActivity {
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         if (device != null) {
                             startUsbService(device);
+                            bindToUsbService();
                         }
                     } else {
                         Log.d(TAG, "permission denied for device " + device);
@@ -170,64 +161,6 @@ public class MainActivity extends FragmentActivity {
         registerReceiver(usbDisconnectedBroadcastReceiver, new IntentFilter(
                 UsbManager.ACTION_USB_DEVICE_DETACHED));
         initUsbService();
-        
-      EditText repeatsInput = (EditText) findViewById(R.id.repeatsInput);
-      repeatsInput.setText(String.valueOf(model.getNumberOfRepeats()));
-      repeatsInput.addTextChangedListener(new TextWatcher() {
-          @Override
-          public void afterTextChanged(Editable s) {
-              model.setNumberOfRepeats(Integer.valueOf(s.toString()));
-          }
-          @Override
-          public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-          }
-          @Override
-          public void onTextChanged(CharSequence s, int start, int before, int count) {
-          }});
-
-      EditText outSizeInput = (EditText) findViewById(R.id.packetOutSizeInput);
-      outSizeInput.setText(String.valueOf(model.getPacketOutSize()));
-      outSizeInput.addTextChangedListener(new TextWatcher() {
-          @Override
-          public void afterTextChanged(Editable s) {
-              model.setPacketOutSize(Short.valueOf(s.toString()));
-          }
-          @Override
-          public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-          }
-          @Override
-          public void onTextChanged(CharSequence s, int start, int before, int count) {
-          }});
-
-      EditText inSizeInput = (EditText) findViewById(R.id.packetInSizeInput);
-      inSizeInput.setText(String.valueOf(model.getPacketInSize()));
-      inSizeInput.addTextChangedListener(new TextWatcher() {
-          @Override
-          public void afterTextChanged(Editable s) {
-              model.setPacketInSize(Short.valueOf(s.toString()));
-          }
-          @Override
-          public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-          }
-          @Override
-          public void onTextChanged(CharSequence s, int start, int before, int count) {
-          }});
-
-      CheckBox saveLogsCheckBox = (CheckBox) findViewById(R.id.saveLogsCheckBox);
-      saveLogsCheckBox.setSelected(model.isSaveLogs());
-      saveLogsCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-          @Override
-          public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-              model.setSaveLogs(isChecked);
-          }});
-      
-      Button runButton = (Button) findViewById(R.id.runButton);
-      runButton.setOnClickListener(new OnClickListener(){
-
-          @Override
-          public void onClick(View v) {
-              model.isSaveLogs();
-          }});
     }
 
     private void initUsbService() {
@@ -389,14 +322,33 @@ public class MainActivity extends FragmentActivity {
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        private Fragment[] fragments = new Fragment[] { new HomeSectionFragment(),
-                new DetailsSectionFragment(), new GraphSectionFragment() };
+        private Fragment[] fragments;
 
         private CharSequence[] titles = new CharSequence[] { getString(R.string.title_home),
                 getString(R.string.title_details), getString(R.string.title_graph) };
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
+            HomeSectionFragment homeFragment = new HomeSectionFragment();
+            DetailsSectionFragment detailsFragment = new DetailsSectionFragment();
+            detailsFragment.setListener(new DetailsFragmentListener() {
+                @Override
+                public void onRunUsbTest(DetailsViewModel model) {
+                    if (microUsbService != null) {
+                        try {
+                            microUsbService.testCommunication(model);
+                        } catch (MicrocontrollerException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        } catch (UsbGateException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            GraphSectionFragment graphFragment = new GraphSectionFragment();
+            fragments = new Fragment[] { homeFragment, detailsFragment, graphFragment };
         }
 
         @Override
@@ -412,49 +364,6 @@ public class MainActivity extends FragmentActivity {
         @Override
         public CharSequence getPageTitle(int position) {
             return titles[position];
-        }
-    }
-
-    public static class HomeSectionFragment extends BaseSectionFragment {
-
-        public HomeSectionFragment() {
-            this.layout = R.layout.home;
-        }
-    }
-
-    public static class DetailsSectionFragment extends BaseSectionFragment {
-        public DetailsSectionFragment() {
-            this.layout = R.layout.details;
-        }
-    }
-
-    public static class GraphSectionFragment extends BaseSectionFragment {
-
-        public GraphSectionFragment() {
-            this.layout = R.layout.graph;
-        }
-    }
-
-    public static class BaseSectionFragment extends Fragment {
-
-        protected int layout;
-
-        @Override
-        public void onConfigurationChanged(Configuration newConfig) {
-            super.onConfigurationChanged(newConfig);
-            LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(
-                    Context.LAYOUT_INFLATER_SERVICE);
-            View newView = inflater.inflate(layout, null);
-            ViewGroup rootView = (ViewGroup) getView();
-            rootView.removeAllViews();
-            rootView.addView(newView);
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            View rootView = inflater.inflate(layout, container, false);
-            return rootView;
         }
     }
 }

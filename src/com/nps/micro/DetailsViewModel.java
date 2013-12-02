@@ -4,22 +4,22 @@ package com.nps.micro;
  * @author Norbert Pabian
  * www.npsoftware.pl
  */
-public class DetailsFragmentModel {
+public class DetailsViewModel {
 
-    int numberOfRepeats;
-    short packetOutSize;
-    short packetInSize;
-    String device;
-    Arhitecture arhitecture;
-    boolean saveLogs;
+    private int numberOfRepeats;
+    private short packetOutSize;
+    private short packetInSize;
+    private String device;
+    private Arhitecture arhitecture;
+    private boolean saveLogs;
 
-    public DetailsFragmentModel() {
+    public DetailsViewModel() {
         super();
         numberOfRepeats = 1;
         packetOutSize = 16;
         packetInSize = 48;
-        device = "All"; // TODO FIXME
-        arhitecture = Arhitecture.SEQUENCE;
+        device = null;
+        arhitecture = Arhitecture.SEQUENCE_SRSR;
         saveLogs = true;
     }
 

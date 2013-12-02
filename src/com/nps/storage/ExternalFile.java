@@ -14,18 +14,18 @@ import com.nps.micro.R;
  * @author Norbert Pabian
  * www.npsoftware.pl
  */
-public class SpeedLogger {
+public class ExternalFile {
 
     private static final String EXTENSION = ".txt";
     private final String logsCatalog;
     private Context context;
 
-    public SpeedLogger(Context context) {
+    public ExternalFile(Context context) {
         this.context = context;
         logsCatalog = this.context.getString(R.string.logs_catalog);
     }
 
-    public void saveLogs(String logs, String device) throws ExternalStorageException {
+    public void save(String logs, String device) throws ExternalStorageException {
         if (ExternalStorage.isAvailable() && ExternalStorage.isWritable()) {
             File dir = new File(ExternalStorage.getSdCardPath() + logsCatalog + File.separator
                     + getDate());

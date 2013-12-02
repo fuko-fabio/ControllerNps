@@ -94,8 +94,9 @@ public class UsbGate {
      * @param packet generated packet to sent
      * @return true for success or false for failure
      * @throws IllegalAccessException if USB interface cannot be claimed
+     * @throws UsbGateException if data cannot be send via USB interface
      */
-    public boolean send(Packet packet) throws IllegalAccessException {
+    public long send(Packet packet) throws IllegalAccessException, UsbGateException {
         return send(packet.toByteArray());
     }
 
@@ -103,13 +104,20 @@ public class UsbGate {
      * Send synchronous data via USB
      * 
      * @param buffer data to send
-     * @return true for success or false for failure
+     * @return how long time spend on send data in nanoseconds
      * @throws IllegalAccessException if USB interface cannot be claimed
+     * @throws UsbGateException if data cannot be send via USB interface
      */
-    public boolean send(byte[] buffer) throws IllegalAccessException {
+    public long send(byte[] buffer) throws IllegalAccessException, UsbGateException {
         if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
             throw new IllegalAccessException("USB interface cannot be claimed");
-        return mUsbConnection.bulkTransfer(mUsbEndpointOut, buffer, buffer.length, TIMEOUT) < 0 ? false : true;
+        long duration = System.nanoTime();
+        int result = mUsbConnection.bulkTransfer(mUsbEndpointOut, buffer, buffer.length, TIMEOUT);
+        duration = System.nanoTime() - duration;
+        if (result < 0 ) {
+            throw new UsbGateException("Couldn't send data via USB interface.");
+        }
+        return duration;
     }
 
     /**
@@ -117,26 +125,40 @@ public class UsbGate {
      * 
      * @param buffer data to send
      * @param timeout
-     * @return true for success or false for failure
+     * @return how long time spend on send data in nanoseconds
      * @throws IllegalAccessException if USB interface cannot be claimed
+     * @throws UsbGateException if data cannot be send via USB interface
      */
-    public boolean send(byte[] buffer, int timeout) throws IllegalAccessException {
+    public long send(byte[] buffer, int timeout) throws IllegalAccessException, UsbGateException {
         if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
             throw new IllegalAccessException("USB interface cannot be claimed");
-        return mUsbConnection.bulkTransfer(mUsbEndpointOut, buffer, buffer.length, timeout) < 0 ? false : true;
+        long duration = System.nanoTime();
+        int result = mUsbConnection.bulkTransfer(mUsbEndpointOut, buffer, buffer.length, timeout);
+        duration = System.nanoTime() - duration;
+        if (result < 0 ) {
+            throw new UsbGateException("Couldn't send data via USB interface.");
+        }
+        return duration;
     }
 
     /**
      * Read synchronous data from USB
      * 
      * @param buffer received data
-     * @return true for success or false for failure
+     * @return how long time spend on read data in nanoseconds
      * @throws IllegalAccessException  if USB interface cannot be claimed
+     * @throws UsbGateException if data cannot be read from USB interface
      */
-    public boolean receive(byte[] buffer) throws IllegalAccessException {
+    public long receive(byte[] buffer) throws IllegalAccessException, UsbGateException {
         if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
             throw new IllegalAccessException("USB interface cannot be claimed");
-        return mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, buffer.length, TIMEOUT) < 0 ? false : true;
+        long duration = System.nanoTime();
+        int result =  mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, buffer.length, TIMEOUT);
+        duration = System.nanoTime() - duration;
+        if (result < 0 ) {
+            throw new UsbGateException("Couldn't read data from USB interface.");
+        }
+        return duration;
     }
 
     /**
@@ -144,13 +166,20 @@ public class UsbGate {
      * 
      * @param buffer received data
      * @param timeout
-     * @return true for success or false for failure
+     * @return how long time spend on read data in nanoseconds
      * @throws IllegalAccessException if USB interface cannot be claimed
+     * @throws UsbGateException if data cannot be read from USB interface
      */
-    public boolean receive(byte[] buffer, int timeout) throws IllegalAccessException {
+    public long receive(byte[] buffer, int timeout) throws IllegalAccessException, UsbGateException {
         if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
             throw new IllegalAccessException("USB interface cannot be claimed");
-        return mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, buffer.length, timeout) < 0 ? false : true;
+        long duration = System.nanoTime();
+        int result =  mUsbConnection.bulkTransfer(mUsbEndpointIn, buffer, buffer.length, timeout);
+        duration = System.nanoTime() - duration;
+        if (result < 0 ) {
+            throw new UsbGateException("Couldn't read data from USB interface.");
+        }
+        return duration;
     }
 
     /**
