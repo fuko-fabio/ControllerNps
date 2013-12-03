@@ -10,7 +10,7 @@
     <string name="usb_not_found">USB Device not found!</string>
     <string name="close">Close</string>
     <string name="try_again">Try Again</string>
-    <string name="usb_not_found_info">Cannot find proper USB device with given configuration. Check connection and try again open application</string>
+    <string name="usb_not_found_info">Cannot find supported USB devices. Check connection and try again open application</string>
     <string name="usb_not_opened_info">Cannot open communication between devices. Check microcontroller software and try again.</string>
     <string name="usb_not_opened">Cannot open communication!</string>
     <string name="usb_not_connected">Cannot connect to device</string>

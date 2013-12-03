@@ -1,5 +1,9 @@
 package com.nps.usb.packet;
 
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
+import android.util.Log;
+
 import com.nps.usb.UsbGate;
 import com.nps.usb.UsbGateException;
 
@@ -8,6 +12,8 @@ import com.nps.usb.UsbGateException;
  * www.npsoftware.pl
  */
 public class Microcontroller {
+
+    private static final String TAG = "Microcontroller";
 
 	private Mode mode = Mode.COMMAND;
 	private PacketSize packetSize = new PacketSize();
@@ -18,7 +24,18 @@ public class Microcontroller {
 		this.usbGate = usbGate;
 	}
 
-	public void getStreamParameters() throws MicrocontrollerException, UsbGateException {
+	public Microcontroller(UsbManager usbManager, UsbDevice device) throws IllegalArgumentException, UsbGateException {
+        usbGate = new UsbGate(usbManager, device);
+        Log.d(TAG, "USB gate created succesfully for device: " + device);
+        usbGate.createConnection();
+        Log.d(TAG, "USB connection oppened succesfully for device: " + device);
+    }
+
+    public void closeConnection() {
+        usbGate.close();
+    }
+
+    public void getStreamParameters() throws MicrocontrollerException, UsbGateException {
 		if(mode == Mode.STREAM) {
 			throw new MicrocontrollerException("Cannot read stream parameters. Current communication mode is 'STREAM'");
 		}

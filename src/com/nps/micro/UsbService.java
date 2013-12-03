@@ -41,12 +41,8 @@ public class UsbService extends Service {
     private static boolean isRunning = false;
 
     private UsbManager usbManager;
-    private UsbDevice device;
-    private UsbGate usbGate;
-    private Microcontroller microcontroller;
-    //TODO fill devices list
+    private List<UsbDevice> devices = new ArrayList<UsbDevice>();
     private List<Microcontroller> microcontrollers = new ArrayList<Microcontroller>();
-    private List<MeasurementsData> measurmentDatas;
 
      // Keeps track of all current registered clients.
     static ArrayList<Messenger> mClients = new ArrayList<Messenger>();
@@ -93,25 +89,27 @@ public class UsbService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Received start id " + startId + ": " + intent);
-        device = intent.getParcelableExtra("device");
-        try {
-            usbGate = new UsbGate(usbManager, device);
-            Log.d(TAG, "USB gate created succesfully.");
-            initMicrocontrollers();
-        } catch (Exception e) {
-            Log.d(TAG, "Cannot initialize USB gate: " + e.getMessage());
-            sendMessageToUI(MSG_ERROR_CREATE_USB_GATE, e.getMessage());
+        int numberOfDevices = intent.getIntExtra("numberOfDevices", 0);
+        for (int i = 0; i < numberOfDevices; i++) {
+            devices.add((UsbDevice) intent.getParcelableExtra("device" + i));
         }
+        initMicrocontrollers();
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        usbGate.close();
+        closeMicrocontrollers();
         // Cancel the persistent notification.
         notificationManager.cancel(NOTIFICATION);
 
         isRunning = false;
+    }
+
+    private void closeMicrocontrollers() {
+        for( Microcontroller micro : microcontrollers) {
+            micro.closeConnection();
+        }
     }
 
     @Override
@@ -138,26 +136,15 @@ public class UsbService extends Service {
 
     public void initMicrocontrollers() {
         try {
-            usbGate.createConnection();
-            Log.d(TAG, "USB connection oppened succesfully.");
-            microcontroller = new Microcontroller(usbGate);
-            microcontroller.getStreamParameters();
-            microcontroller.setStreamParameters((short) 32, (short) 96);
-            microcontroller.switchToStreamMode();
-
-            long duration = microcontroller.sendStreamPacket();
-            duration = duration + microcontroller.receiveStreamPacket();
-
-            microcontroller.switchToCommandMode();
-            microcontroller.getStreamParameters();
-            microcontrollers.add(microcontroller);
+            for (UsbDevice device : devices) {
+                microcontrollers.add(new Microcontroller(usbManager, device));
+            }
         } catch (UsbGateException e) {
-            Log.d(TAG, "Cannot open USB connection.");
+            Log.d(TAG, "Cannot open USB connection cause: " + e.getMessage());
             sendMessageToUI(MSG_ERROR_OPEN_USB_GATE, e.getMessage());
-        } catch (MicrocontrollerException e) {
-            Log.d(TAG, "Cannot switch to stream mode: " + e.getMessage());
-            sendMessageToUI(MSG_ERROR_SWITCH_TO_STREAM, e.getMessage());
-            usbGate.close();
+        } catch (IllegalArgumentException e) {
+            Log.d(TAG, "Cannot open USB connection cause: " + e.getMessage());
+            sendMessageToUI(MSG_ERROR_OPEN_USB_GATE, e.getMessage());
         }
     }
 
@@ -208,7 +195,6 @@ public class UsbService extends Service {
 
     private void testSequenceSendReadSendRead(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
         Log.d(TAG, "Starting test: Sequence SRSR");
-        initMeasurmentObjects(model);
         for (int i = 0; i < model.getNumberOfRepeats(); i++) {
             int index = 0;
             for (Microcontroller micro : microcontrollers) {
@@ -216,7 +202,6 @@ public class UsbService extends Service {
                 duration = duration + micro.receiveStreamPacket();
                 byte[] rd = micro.getLastReceivedData();
                 short hardwareDuration = Packet.shortFromBytes(rd[0], rd[1]);
-                measurmentDatas.get(index).addDurations(duration, hardwareDuration);
                 index++;
             }
         }
@@ -228,7 +213,6 @@ public class UsbService extends Service {
 
     private void testSequenceSendSendReadRead(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
         Log.d(TAG, "Starting test: Sequence SSRR");
-        initMeasurmentObjects(model);
         for (int i = 0; i < model.getNumberOfRepeats(); i++) {
             List<Long> tmpDurations = new ArrayList<Long>();
             for (Microcontroller micro : microcontrollers) {
@@ -240,7 +224,6 @@ public class UsbService extends Service {
                 long duration = tmpDurations.get(index) + micro.receiveStreamPacket();
                 byte[] rd = micro.getLastReceivedData();
                 short hardwareDuration = Packet.shortFromBytes(rd[0], rd[1]);
-                measurmentDatas.get(index).addDurations(duration, hardwareDuration);
                 index++;
             }
         }
@@ -248,18 +231,6 @@ public class UsbService extends Service {
             saveMeasurmentsResults();
         }
         Log.d(TAG, "Sequence SSRR test done");
-    }
-
-    private void initMeasurmentObjects(DetailsViewModel model) {
-        measurmentDatas = new ArrayList<MeasurementsData>();
-        for (int i = 0; i < microcontrollers.size(); i++) {
-            MeasurementsData md = new MeasurementsData();
-            md.setRepeats(model.getNumberOfRepeats());
-            md.setStreamOutSize(model.getPacketOutSize());
-            md.setStreamInSize(model.getPacketInSize());
-            md.setDescription(microcontrollers.get(i).getDeviceDescription());
-            measurmentDatas.add(md);
-        }
     }
 
     private void saveMeasurmentsResults() {

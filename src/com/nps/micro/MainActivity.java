@@ -1,7 +1,9 @@
 package com.nps.micro;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -12,6 +14,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
+import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
@@ -50,6 +53,9 @@ public class MainActivity extends FragmentActivity {
     // private DeviceIds deviceIds = new DeviceIds("Olimex sam3", 24857, 1003);
     private DeviceIds deviceIds = new DeviceIds("Olimex sam7", 24870, 1003);
 
+    List<UsbDevice> devices = new ArrayList<UsbDevice>();
+    List<UsbDevice> devicesWithoutPermisions = new ArrayList<UsbDevice>();
+
     private BroadcastReceiver usbDisconnectedBroadcastReceiver;
 
     private class UsbDisconnectedBroadcastReceiver extends BroadcastReceiver {
@@ -80,14 +86,11 @@ public class MainActivity extends FragmentActivity {
             String action = intent.getAction();
             if (ACTION_USB_PERMISSION.equals(action)) {
                 synchronized (this) {
-                    UsbDevice device = (UsbDevice) intent
-                            .getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                    UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                        if (device != null) {
-                            startUsbService(device);
-                            bindToUsbService();
-                        }
+                        devicesWithoutPermisions.remove(0);
+                        requestPermisionForDevice();
                     } else {
                         Log.d(TAG, "permission denied for device " + device);
                     }
@@ -143,6 +146,7 @@ public class MainActivity extends FragmentActivity {
      * The {@link ViewPager} that will host the section contents.
      */
     ViewPager mViewPager;
+    private UsbManager usbManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,15 +168,18 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void initUsbService() {
-        UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-        initUsbDevice(usbManager);
+        usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        initUsbDevices();
     }
 
-    private void startUsbService(UsbDevice device) {
+    private void startUsbService() {
         isDeviceAvailable = true;
         Log.d(TAG, "Setup USB service.");
         usbServiceIntent = new Intent(this, UsbService.class);
-        usbServiceIntent.putExtra("device", device);
+        usbServiceIntent.putExtra("numberOfDevices", devices.size());
+        for (int i = 0; i < devices.size(); i++) {
+            usbServiceIntent.putExtra("device" + i, devices.get(i));
+        }
         Log.d(TAG, "Starting nps usb service...");
         startService(usbServiceIntent);
     }
@@ -181,39 +188,51 @@ public class MainActivity extends FragmentActivity {
         if (device == null) {
             return false;
         }
-        return device.getProductId() == deviceIds.getProductId()
-                && device.getVendorId() == deviceIds.getVendorId();
+        if (device.getProductId() == deviceIds.getProductId()
+                && device.getVendorId() == deviceIds.getVendorId()) {
+            for (int i = 0; i < device.getInterfaceCount(); i++) {
+                if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
-    private void initUsbDevice(UsbManager usbManager) {
-
-        UsbDevice device = (UsbDevice) getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
-        if (device == null) {
-            HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
-            Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
-            while (deviceIterator.hasNext()) {
-                UsbDevice dev = deviceIterator.next();
-                if (isExpectedDevice(dev)) {
-                    device = dev;
-                    break;
-                }
+    private void initUsbDevices() {
+        HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
+        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
+        while (deviceIterator.hasNext()) {
+            UsbDevice dev = deviceIterator.next();
+            if (isExpectedDevice(dev)) {
+                devices.add(dev);
             }
-            if (device != null) {
-                if (!usbManager.hasPermission(device)) {
-                    PendingIntent permissionIntent = PendingIntent.getBroadcast(this, 0,
-                            new Intent(ACTION_USB_PERMISSION), 0);
-                    IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-                    registerReceiver(usbPermissionBroadcastReceiver, filter);
-                    usbManager.requestPermission(device, permissionIntent);
-                } else {
-                    startUsbService(device);
-                }
-            } else {
-                Log.d(TAG, "Cannot find target USB device");
-                Dialogs.getUsbDeviceNotFoundDialog(this).show();
-            }
+        }
+        if (!devices.isEmpty()) {
+            devicesWithoutPermisions = new ArrayList<UsbDevice>(devices);
+            requestPermisionForDevice();
         } else {
-            startUsbService(device);
+            Log.d(TAG, "Cannot find target USB device");
+            Dialogs.getUsbDeviceNotFoundDialog(this).show();
+        }
+    }
+
+    private void requestPermisionForDevice() {
+        if (devicesWithoutPermisions.isEmpty()) {
+            startUsbService();
+            bindToUsbService();
+            return;
+        }
+        UsbDevice dev = devicesWithoutPermisions.get(0);
+        if (usbManager.hasPermission(dev)) {
+            devicesWithoutPermisions.remove(0);
+            requestPermisionForDevice();
+        } else {
+            PendingIntent permissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
+                    ACTION_USB_PERMISSION), 0);
+            IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+            registerReceiver(usbPermissionBroadcastReceiver, filter);
+            usbManager.requestPermission(dev, permissionIntent);
         }
     }
 
