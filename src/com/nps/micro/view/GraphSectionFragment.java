@@ -1,4 +1,6 @@
-package com.nps.micro;
+package com.nps.micro.view;
+
+import com.nps.micro.R;
 
 public class GraphSectionFragment extends BaseSectionFragment {
 

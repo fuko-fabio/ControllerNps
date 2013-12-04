@@ -1,9 +1,11 @@
-package com.nps.micro;
+package com.nps.micro.view;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+
+import com.nps.micro.R;
 
 /**
  * @author Norbert Pabian

@@ -1,4 +1,4 @@
-package com.nps.usb.packet;
+package com.nps.usb.microcontroller;
 
 /**
  * @author Norbert Pabian

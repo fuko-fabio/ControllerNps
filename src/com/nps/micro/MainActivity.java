@@ -31,9 +31,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.widget.Toast;
 
+import com.nps.micro.model.DetailsViewModel;
+import com.nps.micro.view.DetailsFragmentListener;
+import com.nps.micro.view.DetailsSectionFragment;
+import com.nps.micro.view.Dialogs;
+import com.nps.micro.view.GraphSectionFragment;
+import com.nps.micro.view.HomeSectionFragment;
 import com.nps.usb.DeviceIds;
 import com.nps.usb.UsbGateException;
-import com.nps.usb.packet.MicrocontrollerException;
+import com.nps.usb.microcontroller.MicrocontrollerException;
 
 /**
  * @author Norbert Pabian

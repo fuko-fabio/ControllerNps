@@ -1,4 +1,4 @@
-package com.nps.micro;
+package com.nps.micro.view;
 
 import android.content.Context;
 import android.content.res.Configuration;

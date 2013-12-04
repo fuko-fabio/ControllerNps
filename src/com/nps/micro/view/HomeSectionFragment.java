@@ -1,9 +1,11 @@
-package com.nps.micro;
+package com.nps.micro.view;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.nps.micro.R;
 
 public class HomeSectionFragment extends BaseSectionFragment {
 

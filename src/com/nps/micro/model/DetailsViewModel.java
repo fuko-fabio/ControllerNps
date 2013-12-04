@@ -1,4 +1,9 @@
-package com.nps.micro;
+package com.nps.micro.model;
+
+import java.util.Arrays;
+import java.util.List;
+
+import com.nps.usb.microcontroller.Arhitecture;
 
 /**
  * @author Norbert Pabian
@@ -6,40 +11,40 @@ package com.nps.micro;
  */
 public class DetailsViewModel {
 
-    private int numberOfRepeats;
-    private short packetOutSize;
-    private short packetInSize;
+    private int repeats;
+    private int streamOutSize;
+    private List<Integer> streamInSize;
     private String device;
     private Arhitecture arhitecture;
     private boolean saveLogs;
 
     public DetailsViewModel() {
         super();
-        numberOfRepeats = 1;
-        packetOutSize = 16;
-        packetInSize = 48;
+        repeats = 1;
+        streamOutSize = 16;
+        streamInSize = Arrays.asList(48);
         device = null;
         arhitecture = Arhitecture.SEQUENCE_SRSR;
         saveLogs = true;
     }
 
-    public int getNumberOfRepeats() {
-        return numberOfRepeats;
+    public int getRepeats() {
+        return repeats;
     }
-    public void setNumberOfRepeats(int numberOfRepeats) {
-        this.numberOfRepeats = numberOfRepeats;
+    public void setRepeats(int repeats) {
+        this.repeats = repeats;
     }
-    public short getPacketOutSize() {
-        return packetOutSize;
+    public int getStreamOutSize() {
+        return streamOutSize;
     }
-    public void setPacketOutSize(short packetOutSize) {
-        this.packetOutSize = packetOutSize;
+    public void setStreamOutSize(short streamOutSize) {
+        this.streamOutSize = streamOutSize;
     }
-    public short getPacketInSize() {
-        return packetInSize;
+    public List<Integer> getStreamInSize() {
+        return streamInSize;
     }
-    public void setPacketInSize(short packetInSize) {
-        this.packetInSize = packetInSize;
+    public void setStreamInSize(List<Integer> streamInSize) {
+        this.streamInSize = streamInSize;
     }
     public String getDevice() {
         return device;

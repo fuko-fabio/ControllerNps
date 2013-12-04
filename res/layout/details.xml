@@ -29,10 +29,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.47"
-                android:inputType="numberSigned" >
-
-                <requestFocus />
-            </EditText>
+                android:inputType="numberSigned" />
 
             <Button
                 android:id="@+id/setRepeatsButton"
@@ -80,7 +77,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.71"
-                android:inputType="numberSigned" />
+                android:inputType="text" />
 
             <Button
                 android:id="@+id/setInSizeButton"

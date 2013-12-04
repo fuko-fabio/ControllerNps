@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
+
 import com.nps.micro.R;
 
 /**
@@ -16,7 +18,8 @@ import com.nps.micro.R;
  */
 public class ExternalFile {
 
-    private static final String EXTENSION = ".txt";
+    private static final String PREFIX = "data";
+    private static final String EXTENSION = ".m";
     private final String logsCatalog;
     private Context context;
 
@@ -25,17 +28,17 @@ public class ExternalFile {
         logsCatalog = this.context.getString(R.string.logs_catalog);
     }
 
-    public void save(String logs, String device) throws ExternalStorageException {
+    public void save(TestResults measuredData) throws ExternalStorageException {
         if (ExternalStorage.isAvailable() && ExternalStorage.isWritable()) {
             File dir = new File(ExternalStorage.getSdCardPath() + logsCatalog + File.separator
-                    + getDate());
+                    + getDate() + File.separator + measuredData.getArhitecture().name());
             dir.mkdirs();
-            File logsFile = new File(dir + File.separator + logsFilePath(device) + EXTENSION);
+            File logsFile = new File(dir + File.separator + logsFilename(measuredData) + EXTENSION);
             try {
                 logsFile.createNewFile();
                 FileOutputStream logsFileOutputStream = new FileOutputStream(logsFile);
                 OutputStreamWriter myOutWriter = new OutputStreamWriter(logsFileOutputStream);
-                myOutWriter.append(logs);
+                myOutWriter.append(measuredData.toMatlabFileFormat());
                 myOutWriter.close();
                 logsFileOutputStream.close();
             } catch (IOException e) {
@@ -53,8 +56,7 @@ public class ExternalFile {
         return new SimpleDateFormat("yyyy_MM_dd").format(new Date());
     }
 
-    @SuppressLint("SimpleDateFormat")
-    private String logsFilePath(String device) {
-        return device + new SimpleDateFormat("kk_mm_ss").format(new Date());
+    private String logsFilename(TestResults md) {
+        return PREFIX + '_' + md.getStreamOutSize() + '_' + md.getStreamInSize() + "_x" + md.getRepeats();
     }
 }

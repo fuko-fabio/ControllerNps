@@ -20,12 +20,13 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.nps.usb.UsbGate;
+import com.nps.micro.model.DetailsViewModel;
+import com.nps.storage.ExternalFile;
+import com.nps.storage.ExternalStorageException;
+import com.nps.storage.TestResults;
 import com.nps.usb.UsbGateException;
-import com.nps.usb.packet.MeasurementsData;
-import com.nps.usb.packet.Microcontroller;
-import com.nps.usb.packet.MicrocontrollerException;
-import com.nps.usb.packet.Packet;
+import com.nps.usb.microcontroller.Microcontroller;
+import com.nps.usb.microcontroller.MicrocontrollerException;
 
 /**
  * @author Norbert Pabian
@@ -135,117 +136,119 @@ public class UsbService extends Service {
     }
 
     public void initMicrocontrollers() {
-        try {
-            for (UsbDevice device : devices) {
-                microcontrollers.add(new Microcontroller(usbManager, device));
+        for (UsbDevice device : devices) {
+            Microcontroller micro;
+            try {
+                micro = new Microcontroller(usbManager, device);
+                microcontrollers.add(micro);
+            } catch (UsbGateException e) {
+                Log.d(TAG, "Cannot open USB connection cause: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                Log.d(TAG, "Cannot open USB connection cause: " + e.getMessage());
             }
-        } catch (UsbGateException e) {
-            Log.d(TAG, "Cannot open USB connection cause: " + e.getMessage());
-            sendMessageToUI(MSG_ERROR_OPEN_USB_GATE, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            Log.d(TAG, "Cannot open USB connection cause: " + e.getMessage());
-            sendMessageToUI(MSG_ERROR_OPEN_USB_GATE, e.getMessage());
+        }
+        if (microcontrollers.isEmpty()) {
+            //TODO Send msg and close app
         }
     }
 
     public void testCommunication(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
-        switchMicrocontrollersToStreamMode(model);
-        switch (model.getArhitecture()) {
-        case PARALLEL_ATO:
-            testParallelAndroidOneThread(model);
-            break;
-        case PARALLEL_AJT:
-            testParallelAndroidTwoThread(model);
-            break;
-        case PARALLEL_JTO:
-            testParallelJavaOneThread(model);
-            break;
-        case PARALLEL_JTT:
-            testParallelJavaTwoThread(model);
-            break;
-        case SEQUENCE_SRSR:
-            testSequenceSendReadSendRead(model);
-            break;
-        case SEQUENCE_SSRR:
-            testSequenceSendSendReadRead(model);
-            break;
-        }
-        switchMicrocontrollersToCommandMode(model);
-    }
-
-    private void testParallelAndroidOneThread(DetailsViewModel model) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void testParallelAndroidTwoThread(DetailsViewModel model) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void testParallelJavaOneThread(DetailsViewModel model) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void testParallelJavaTwoThread(DetailsViewModel model) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void testSequenceSendReadSendRead(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
-        Log.d(TAG, "Starting test: Sequence SRSR");
-        for (int i = 0; i < model.getNumberOfRepeats(); i++) {
-            int index = 0;
-            for (Microcontroller micro : microcontrollers) {
-                long duration = micro.sendStreamPacket();
-                duration = duration + micro.receiveStreamPacket();
-                byte[] rd = micro.getLastReceivedData();
-                short hardwareDuration = Packet.shortFromBytes(rd[0], rd[1]);
-                index++;
+        int repeats = model.getRepeats();
+        for (int setreamInSize : model.getStreamInSize()) {
+            switchMicrocontrollersToStreamMode((short) model.getStreamOutSize(), (short) setreamInSize);
+            TestResults testResults = new TestResults(model.getStreamOutSize(), setreamInSize, repeats, model.getArhitecture());
+            switch (model.getArhitecture()) {
+            case PARALLEL_ATO:
+                testParallelAndroidOneThread(repeats, testResults);
+                break;
+            case PARALLEL_AJT:
+                testParallelAndroidTwoThread(repeats, testResults);
+                break;
+            case PARALLEL_JTO:
+                testParallelJavaOneThread(repeats, testResults);
+                break;
+            case PARALLEL_JTT:
+                testParallelJavaTwoThread(repeats, testResults);
+                break;
+            case SEQUENCE_SRSR:
+                testSequenceSendReadSendRead(repeats, testResults);
+                break;
+            case SEQUENCE_SSRR:
+                testSequenceSendSendReadRead(repeats, testResults);
+                break;
+            }
+            switchMicrocontrollersToCommandMode();
+            if (model.isSaveLogs()) {
+                saveTestResults(testResults);
             }
         }
-        if (model.isSaveLogs()) {
-            saveMeasurmentsResults();
+    }
+
+    private void testParallelAndroidOneThread(int repeats, TestResults testResults) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void testParallelAndroidTwoThread(int repeats, TestResults testResults) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void testParallelJavaOneThread(int repeats, TestResults testResults) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void testParallelJavaTwoThread(int repeats, TestResults testResults) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void testSequenceSendReadSendRead(int repeats, TestResults testResults) throws MicrocontrollerException {
+        Log.d(TAG, "Starting test: Sequence SRSR");
+        for (int i = 0; i < repeats; i++) {
+            long duration = System.nanoTime();
+            for (Microcontroller micro : microcontrollers) {
+                micro.sendStreamPacket(null);
+                micro.receiveStreamPacket();
+            }
+            testResults.addDuration(i, System.nanoTime() - duration, 0, 0);
         }
         Log.d(TAG, "Sequence SRSR test done");
     }
 
-    private void testSequenceSendSendReadRead(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
+    private void testSequenceSendSendReadRead(int repeats, TestResults testResults) throws MicrocontrollerException {
         Log.d(TAG, "Starting test: Sequence SSRR");
-        for (int i = 0; i < model.getNumberOfRepeats(); i++) {
-            List<Long> tmpDurations = new ArrayList<Long>();
+        for (int i = 0; i < repeats; i++) {
+            long duration = System.nanoTime();
             for (Microcontroller micro : microcontrollers) {
-                long duration = micro.sendStreamPacket();
-                tmpDurations.add(duration);
+                micro.sendStreamPacket(null);
             }
-            int index = 0;
             for (Microcontroller micro : microcontrollers) {
-                long duration = tmpDurations.get(index) + micro.receiveStreamPacket();
-                byte[] rd = micro.getLastReceivedData();
-                short hardwareDuration = Packet.shortFromBytes(rd[0], rd[1]);
-                index++;
+                micro.receiveStreamPacket();
             }
-        }
-        if (model.isSaveLogs()) {
-            saveMeasurmentsResults();
+            testResults.addDuration(i, System.nanoTime() - duration, 0, 0);
         }
         Log.d(TAG, "Sequence SSRR test done");
     }
 
-    private void saveMeasurmentsResults() {
-        // TODO Auto-generated method stub
-        
+    private void saveTestResults(TestResults measuredData) {
+        ExternalFile extFile = new ExternalFile(getApplicationContext());
+        try {
+            extFile.save(measuredData);
+        } catch (ExternalStorageException e) {
+            Log.w(TAG, "Couldn't save file with speed logs cause: " + e.getMessage());
+        }
     }
 
-    private void switchMicrocontrollersToStreamMode(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
+    private void switchMicrocontrollersToStreamMode(short streamOutSize, short streamInSize) throws MicrocontrollerException {
         for (Microcontroller micro : microcontrollers) {
-            micro.setStreamParameters(model.getPacketOutSize(), model.getPacketInSize());
+            micro.setStreamParameters(streamOutSize, streamInSize);
             micro.switchToStreamMode();
         }
     }
 
-    private void switchMicrocontrollersToCommandMode(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
+    private void switchMicrocontrollersToCommandMode() throws MicrocontrollerException {
         for (Microcontroller micro : microcontrollers) {
             micro.switchToCommandMode();
         }
