@@ -23,7 +23,10 @@
     <string name="service_name">nps usb service</string>
     <string name="local_service_notification">Usb service</string>
     <string name="local_service_started">NPS Usb service started</string>
-    <string name="local_service_running">NPS Usb service is running</string>
+    <string name="local_service_running">Service is avaiting for commands</string>
+    <string name="local_service_test_started">Microcontrollers test started</string>
+    <string name="local_service_test_done">Microcontrollers test done</string>
+    <string name="local_service_testing">Testing microcontrollers</string>
     <string name="digital_io">Digital Inputs Outputs</string>
     <string name="digital_on1">On 1</string>
     <string name="digital_off1">Off 1</string>

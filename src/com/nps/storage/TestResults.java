@@ -1,8 +1,5 @@
 package com.nps.storage;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.nps.usb.microcontroller.Arhitecture;
 
 /**
@@ -10,31 +7,17 @@ import com.nps.usb.microcontroller.Arhitecture;
  */
 public class TestResults {
 
-    private int streamOutSize;
-    private int streamInSize;
-    private int repeats;
-    private Arhitecture arhitecture;
-    private List<DurationFrame> durations;
-
-    public class DurationFrame {
-        int index;
-        long duration;
-        int hardwareDuration;
-        int reserved;
-        
-        public DurationFrame(int index, long duration, int hardwareDuration, int reserved) {
-            this.index = index;
-            this.duration = duration;
-            this.hardwareDuration =hardwareDuration;
-            this.reserved = reserved;
-        }
-    }
+    private final int streamOutSize;
+    private final int streamInSize;
+    private final int repeats;
+    private final Arhitecture arhitecture;
+    private long[][] durations;
 
     public TestResults(int streamOutSize, int streamInSize, int repeats, Arhitecture arhitecture) {
         this.streamOutSize = streamOutSize;
         this.streamInSize = streamInSize;
         this.repeats = repeats;
-        this.durations = new ArrayList<DurationFrame>(this.repeats);
+        this.durations = new long[repeats][4];
         this.arhitecture = arhitecture;
     }
 
@@ -42,50 +25,45 @@ public class TestResults {
         return streamOutSize;
     }
 
-    public void setStreamOutSize(int streamOutSize) {
-        this.streamOutSize = streamOutSize;
-    }
-
     public int getStreamInSize() {
         return streamInSize;
-    }
-
-    public void setStreamInSize(int streamInSize) {
-        this.streamInSize = streamInSize;
     }
 
     public int getRepeats() {
         return repeats;
     }
 
-    public void setRepeats(int repeats) {
-        this.repeats = repeats;
-    }
-
     public Arhitecture getArhitecture() {
         return arhitecture;
     }
 
-    public void setArhitecture(Arhitecture arhitecture) {
-        this.arhitecture = arhitecture;
-    }
-
-    public void addDuration(int index, long duration, int hardwareDuration, int reserved) {
-        this.durations.add(new DurationFrame(index, duration, hardwareDuration, reserved));
+    public void addDuration(final int currentIndex, final int hardwareIndex, final long duration, final int hardwareDuration, final int reserved) {
+        this.durations[currentIndex][0] = hardwareIndex;
+        this.durations[currentIndex][1] = duration;
+        this.durations[currentIndex][2] = hardwareDuration;
+        this.durations[currentIndex][3] = reserved;
     }
 
     public String toMatlabFileFormat() {
         StringBuilder builder = new StringBuilder();
-        builder.append("dane.rozmiarWysylanegoPakietu = " + streamOutSize + ';')
-               .append("dane.rozmiarOdbieranegoPakietu = " + streamInSize + ';')
-               .append("dane.wartosci = [");
-        for (DurationFrame d : durations) {
-            builder.append(d.index + ", " +
-                           d.duration + ", " +
-                           d.hardwareDuration + ", " +
-                           d.reserved + ';');
+        builder.append("dane.rozmiarWysylanegoPakietu = " + streamOutSize + ";\n")
+               .append("dane.rozmiarOdbieranegoPakietu = " + streamInSize + ";\n")
+               .append("dane.wartosci = [\n");
+        double durationSum = 0;
+        float time;
+        for (long[] d : durations) {
+            time = d[1]/1000000;
+            durationSum += time;
+            builder.append(d[0] + ", " +
+                           time + ", " +
+                           d[2] + ", " +
+                           d[3] + ";\n");
         }
-        builder.append("];");
+        builder.append("];\n")
+               .append("dane.ileRazy = " + repeats + ";\n")
+               .append("dane.sumDT = " + durationSum + ";\n")
+               .append("dane.sredniaDT = " + durationSum/repeats + ";\n")
+               .append("dane.nazwa = '" + streamOutSize + "B/" + streamInSize + "B/x" + repeats + "';\n");
         return builder.toString();
     }
 }

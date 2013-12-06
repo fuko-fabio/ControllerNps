@@ -103,7 +103,7 @@ public class DetailsSectionFragment extends BaseSectionFragment {
             }});
 
         final EditText inSizeInput = (EditText) rootView.findViewById(R.id.packetInSizeInput);
-        inSizeInput.setText(String.valueOf(model.getStreamInSize().get(0)));
+        inSizeInput.setText(String.valueOf(model.getStreamInSize()[0]));
         inSizeInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
@@ -116,7 +116,9 @@ public class DetailsSectionFragment extends BaseSectionFragment {
                         // TODO Auto-generated catch block
                     }
                 }
-                model.setStreamInSize(intVals);
+                int[] array = new int[intVals.size()];
+                for(int i = 0; i < intVals.size(); i++) array[i] = intVals.get(i);
+                model.setStreamInSize(array);
             }
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {

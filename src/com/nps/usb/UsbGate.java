@@ -18,7 +18,7 @@ import android.hardware.usb.UsbRequest;
 public class UsbGate {
 
     protected UsbDevice mUsbDevice;
-    private static int TIMEOUT = 0;
+    private static int TIMEOUT = 500;
     private boolean forceClaim = true;
     private boolean connected = false;
     private UsbInterface mUsbInterface;

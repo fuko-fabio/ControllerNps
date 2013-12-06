@@ -1,8 +1,5 @@
 package com.nps.micro.model;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.nps.usb.microcontroller.Arhitecture;
 
 /**
@@ -13,7 +10,7 @@ public class DetailsViewModel {
 
     private int repeats;
     private int streamOutSize;
-    private List<Integer> streamInSize;
+    private int[] streamInSize;
     private String device;
     private Arhitecture arhitecture;
     private boolean saveLogs;
@@ -22,10 +19,10 @@ public class DetailsViewModel {
         super();
         repeats = 1;
         streamOutSize = 16;
-        streamInSize = Arrays.asList(48);
+        streamInSize = new int[]{48};
         device = null;
-        arhitecture = Arhitecture.SEQUENCE_SRSR;
-        saveLogs = true;
+        arhitecture = Arhitecture.SRSR_STANDARD_PRIORITY;
+        saveLogs = false;
     }
 
     public int getRepeats() {
@@ -40,10 +37,10 @@ public class DetailsViewModel {
     public void setStreamOutSize(short streamOutSize) {
         this.streamOutSize = streamOutSize;
     }
-    public List<Integer> getStreamInSize() {
+    public int[] getStreamInSize() {
         return streamInSize;
     }
-    public void setStreamInSize(List<Integer> streamInSize) {
+    public void setStreamInSize(int[] streamInSize) {
         this.streamInSize = streamInSize;
     }
     public String getDevice() {

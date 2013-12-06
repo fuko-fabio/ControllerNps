@@ -6,12 +6,12 @@ package com.nps.usb.microcontroller;
  * www.npsoftware.pl
  */
 public enum Arhitecture {
-    SEQUENCE_SRSR("Sequence SRSR"),
-    SEQUENCE_SSRR("Sequence SSRR"),
-    PARALLEL_JTO("Java one thread"),
-    PARALLEL_ATO("Android one thread"),
-    PARALLEL_JTT("Java two threads"),
-    PARALLEL_AJT("Android two threads");
+    SRSR_STANDARD_PRIORITY("Standard Priority Sequence SRSR"),
+    SSRR_STANDARD_PRIORITY("Standard Priority Sequence SSRR"),
+    SRSR_HI_PRIORITY_JAVA("Java Hi Priority Sequence SRSR"),
+    SSRR_HI_PRIORITY_JAVA("Java Hi Priority Sequence SSRR"),
+    SRSR_HI_PRIORITY_ANDROID("Android Hi Priority Sequence SRSR"),
+    SSRR_HI_PRIORITY_ANDROID("Android Hi Priority Sequence SSRR");
 
     private String name;
 
@@ -29,6 +29,6 @@ public enum Arhitecture {
             if (arhitectures[i].toString().equalsIgnoreCase(name))
                 return arhitectures[i];
         }
-        return Arhitecture.SEQUENCE_SRSR;
+        return Arhitecture.SRSR_STANDARD_PRIORITY;
     }
 }

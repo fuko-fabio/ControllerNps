@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.Process;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -27,6 +28,9 @@ import com.nps.storage.TestResults;
 import com.nps.usb.UsbGateException;
 import com.nps.usb.microcontroller.Microcontroller;
 import com.nps.usb.microcontroller.MicrocontrollerException;
+import com.nps.usb.microcontroller.Packet;
+import com.nps.usb.microcontroller.Priority;
+import com.nps.usb.microcontroller.Sequence;
 
 /**
  * @author Norbert Pabian
@@ -43,7 +47,7 @@ public class UsbService extends Service {
 
     private UsbManager usbManager;
     private List<UsbDevice> devices = new ArrayList<UsbDevice>();
-    private List<Microcontroller> microcontrollers = new ArrayList<Microcontroller>();
+    private Microcontroller[] microcontrollers;
 
      // Keeps track of all current registered clients.
     static ArrayList<Messenger> mClients = new ArrayList<Messenger>();
@@ -91,6 +95,7 @@ public class UsbService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Received start id " + startId + ": " + intent);
         int numberOfDevices = intent.getIntExtra("numberOfDevices", 0);
+        microcontrollers = new Microcontroller[numberOfDevices];
         for (int i = 0; i < numberOfDevices; i++) {
             devices.add((UsbDevice) intent.getParcelableExtra("device" + i));
         }
@@ -135,90 +140,95 @@ public class UsbService extends Service {
         notificationManager.notify(NOTIFICATION, notification);
     }
 
+    /**
+     * Show a notification service is testing microcontrollers.
+     */
+    @SuppressWarnings("deprecation")
+    private void showTestStartedNotification() {
+        Notification notification = new Notification(R.drawable.ic_launcher,
+                getText(R.string.local_service_test_started), System.currentTimeMillis());
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        notification.setLatestEventInfo(this, getText(R.string.local_service_notification),
+                getText(R.string.local_service_testing), contentIntent);
+
+        notificationManager.notify(NOTIFICATION, notification);
+    }
+
+    /**
+     * Show a notification service is finished testing microcontrollers.
+     */
+    @SuppressWarnings("deprecation")
+    private void showTestDoneNotification() {
+        Notification notification = new Notification(R.drawable.ic_launcher,
+                getText(R.string.local_service_test_done), System.currentTimeMillis());
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        notification.setLatestEventInfo(this, getText(R.string.local_service_notification),
+                getText(R.string.local_service_running), contentIntent);
+
+        notificationManager.notify(NOTIFICATION, notification);
+    }
+
     public void initMicrocontrollers() {
-        for (UsbDevice device : devices) {
+        for (int i=0; i<devices.size();i++) {
             Microcontroller micro;
             try {
-                micro = new Microcontroller(usbManager, device);
-                microcontrollers.add(micro);
+                micro = new Microcontroller(usbManager, devices.get(i));
+                microcontrollers[i] = micro;
             } catch (UsbGateException e) {
-                Log.d(TAG, "Cannot open USB connection cause: " + e.getMessage());
+                Log.e(TAG, "Cannot open USB connection cause: " + e.getMessage());
             } catch (IllegalArgumentException e) {
-                Log.d(TAG, "Cannot open USB connection cause: " + e.getMessage());
+                Log.e(TAG, "Cannot open USB connection cause: " + e.getMessage());
             }
         }
-        if (microcontrollers.isEmpty()) {
+        //if (microcontrollers.isEmpty()) {
             //TODO Send msg and close app
-        }
+        //}
     }
-
+    
     public void testCommunication(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
-        int repeats = model.getRepeats();
-        for (int setreamInSize : model.getStreamInSize()) {
-            switchMicrocontrollersToStreamMode((short) model.getStreamOutSize(), (short) setreamInSize);
-            TestResults testResults = new TestResults(model.getStreamOutSize(), setreamInSize, repeats, model.getArhitecture());
-            switch (model.getArhitecture()) {
-            case PARALLEL_ATO:
-                testParallelAndroidOneThread(repeats, testResults);
-                break;
-            case PARALLEL_AJT:
-                testParallelAndroidTwoThread(repeats, testResults);
-                break;
-            case PARALLEL_JTO:
-                testParallelJavaOneThread(repeats, testResults);
-                break;
-            case PARALLEL_JTT:
-                testParallelJavaTwoThread(repeats, testResults);
-                break;
-            case SEQUENCE_SRSR:
-                testSequenceSendReadSendRead(repeats, testResults);
-                break;
-            case SEQUENCE_SSRR:
-                testSequenceSendSendReadRead(repeats, testResults);
-                break;
-            }
-            switchMicrocontrollersToCommandMode();
-            if (model.isSaveLogs()) {
-                saveTestResults(testResults);
-            }
+        switch (model.getArhitecture()) {
+        case SRSR_STANDARD_PRIORITY:
+            testThread(model, Sequence.SRSR, Priority.JAVA_BASED_NORMAL);
+            break;
+        case SSRR_STANDARD_PRIORITY:
+            testThread(model, Sequence.SSRR, Priority.JAVA_BASED_NORMAL);
+            break;
+        case SRSR_HI_PRIORITY_ANDROID:
+            testThread(model, Sequence.SRSR, Priority.ANDROID_BASED_HIGH);
+            break;
+        case SRSR_HI_PRIORITY_JAVA:
+            testThread(model, Sequence.SRSR, Priority.JAVA_BASED_HIGH);
+            break;
+        case SSRR_HI_PRIORITY_ANDROID:
+            testThread(model, Sequence.SSRR, Priority.ANDROID_BASED_HIGH);
+            break;
+        case SSRR_HI_PRIORITY_JAVA:
+            testThread(model, Sequence.SSRR, Priority.JAVA_BASED_HIGH);
+            break;
         }
     }
 
-    private void testParallelAndroidOneThread(int repeats, TestResults testResults) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void testParallelAndroidTwoThread(int repeats, TestResults testResults) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void testParallelJavaOneThread(int repeats, TestResults testResults) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void testParallelJavaTwoThread(int repeats, TestResults testResults) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void testSequenceSendReadSendRead(int repeats, TestResults testResults) throws MicrocontrollerException {
-        Log.d(TAG, "Starting test: Sequence SRSR");
+    private void executeSequencSRSR(final int repeats, TestResults testResults) throws MicrocontrollerException {
         for (int i = 0; i < repeats; i++) {
             long duration = System.nanoTime();
             for (Microcontroller micro : microcontrollers) {
                 micro.sendStreamPacket(null);
                 micro.receiveStreamPacket();
             }
-            testResults.addDuration(i, System.nanoTime() - duration, 0, 0);
+            byte[] packet = microcontrollers[0].getLastReceivedStreamPacket();
+            testResults.addDuration(i, Packet.shortFromBytes(packet[0], packet[1]),
+                    System.nanoTime() - duration,
+                    Packet.shortFromBytes(packet[4], packet[5]), 0);
         }
-        Log.d(TAG, "Sequence SRSR test done");
     }
 
-    private void testSequenceSendSendReadRead(int repeats, TestResults testResults) throws MicrocontrollerException {
-        Log.d(TAG, "Starting test: Sequence SSRR");
+    private void executeSequenceSSRR(final int repeats, TestResults testResults) throws MicrocontrollerException {
         for (int i = 0; i < repeats; i++) {
             long duration = System.nanoTime();
             for (Microcontroller micro : microcontrollers) {
@@ -227,9 +237,53 @@ public class UsbService extends Service {
             for (Microcontroller micro : microcontrollers) {
                 micro.receiveStreamPacket();
             }
-            testResults.addDuration(i, System.nanoTime() - duration, 0, 0);
+            byte[] packet = microcontrollers[0].getLastReceivedStreamPacket();
+            testResults.addDuration(i, Packet.shortFromBytes(packet[0], packet[1]),
+                    System.nanoTime() - duration,
+                    Packet.shortFromBytes(packet[4], packet[5]), 0);
         }
-        Log.d(TAG, "Sequence SSRR test done");
+    }
+
+    private void testThread(final DetailsViewModel model, final Sequence sequence, final Priority priority) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Starting test: Java thread sequence " + sequence.name() + " priority: " + priority.name());
+                showTestStartedNotification();
+                if(priority == Priority.ANDROID_BASED_HIGH){
+                    Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+                }
+                final int repeats = model.getRepeats();
+                try {
+                    for (int setreamInSize : model.getStreamInSize()) {
+                        System.gc();
+                        switchMicrocontrollersToStreamMode((short) model.getStreamOutSize(), (short) setreamInSize);
+                        TestResults testResults = new TestResults(model.getStreamOutSize(), setreamInSize, repeats, model.getArhitecture());
+                        switch (sequence){
+                        case SRSR:
+                            executeSequencSRSR(repeats, testResults);
+                            break;
+                        case SSRR:
+                            executeSequenceSSRR(repeats, testResults);
+                            break;
+                        }
+                        switchMicrocontrollersToCommandMode();
+                        System.gc();
+                        if (model.isSaveLogs()) {
+                            saveTestResults(testResults);
+                        }
+                    }
+                } catch (MicrocontrollerException e) {
+                    Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
+                }
+                Log.d(TAG, "Test done: Java thread sequence " + sequence.name() + " priority: " + priority.name());
+                showTestDoneNotification();
+            }
+        });
+        if(priority == Priority.JAVA_BASED_HIGH){
+            thread.setPriority(Thread.MAX_PRIORITY);
+        }
+        thread.start();
     }
 
     private void saveTestResults(TestResults measuredData) {

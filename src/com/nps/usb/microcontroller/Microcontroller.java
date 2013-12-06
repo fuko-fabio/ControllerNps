@@ -116,6 +116,10 @@ public class Microcontroller {
         return testStreamInBuffer;
     }
 
+    public byte[] getLastReceivedStreamPacket() {
+        return testStreamInBuffer;
+    }
+
     /**
      * Switch communication to command mode
      * 
