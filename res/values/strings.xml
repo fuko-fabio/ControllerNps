@@ -54,6 +54,6 @@
     <string name="run">Run</string>
     <string name="select">Select</string>
     <string name="device">Device</string>
-    
-    
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 </resources>

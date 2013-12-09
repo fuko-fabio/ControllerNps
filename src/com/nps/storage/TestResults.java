@@ -50,9 +50,9 @@ public class TestResults {
                .append("dane.rozmiarOdbieranegoPakietu = " + streamInSize + ";\n")
                .append("dane.wartosci = [\n");
         double durationSum = 0;
-        float time;
+        double time;
         for (long[] d : durations) {
-            time = d[1]/1000000;
+            time = (double)d[1]/1000000;
             durationSum += time;
             builder.append(d[0] + ", " +
                            time + ", " +

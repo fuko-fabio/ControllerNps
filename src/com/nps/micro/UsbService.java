@@ -2,6 +2,10 @@ package com.nps.micro;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -26,6 +30,7 @@ import com.nps.storage.ExternalFile;
 import com.nps.storage.ExternalStorageException;
 import com.nps.storage.TestResults;
 import com.nps.usb.UsbGateException;
+import com.nps.usb.microcontroller.Arhitecture;
 import com.nps.usb.microcontroller.Microcontroller;
 import com.nps.usb.microcontroller.MicrocontrollerException;
 import com.nps.usb.microcontroller.Packet;
@@ -42,6 +47,10 @@ public class UsbService extends Service {
     
     private NotificationManager notificationManager;
     private int NOTIFICATION = R.string.local_service_notification;
+
+    private ExecutorService executorService;
+    @SuppressWarnings("rawtypes")
+    private List<Future> futures = new ArrayList<Future>();
 
     private static boolean isRunning = false;
 
@@ -86,7 +95,7 @@ public class UsbService extends Service {
         Log.d(TAG, "Creating service...");
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-
+        executorService = Executors.newSingleThreadExecutor();
         showNotification();
         isRunning = true;
     }
@@ -106,9 +115,8 @@ public class UsbService extends Service {
     @Override
     public void onDestroy() {
         closeMicrocontrollers();
-        // Cancel the persistent notification.
         notificationManager.cancel(NOTIFICATION);
-
+        executorService.shutdown();
         isRunning = false;
     }
 
@@ -192,64 +200,69 @@ public class UsbService extends Service {
     }
     
     public void testCommunication(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
-        switch (model.getArhitecture()) {
-        case SRSR_STANDARD_PRIORITY:
-            testThread(model, Sequence.SRSR, Priority.JAVA_BASED_NORMAL);
-            break;
-        case SSRR_STANDARD_PRIORITY:
-            testThread(model, Sequence.SSRR, Priority.JAVA_BASED_NORMAL);
-            break;
-        case SRSR_HI_PRIORITY_ANDROID:
-            testThread(model, Sequence.SRSR, Priority.ANDROID_BASED_HIGH);
-            break;
-        case SRSR_HI_PRIORITY_JAVA:
-            testThread(model, Sequence.SRSR, Priority.JAVA_BASED_HIGH);
-            break;
-        case SSRR_HI_PRIORITY_ANDROID:
-            testThread(model, Sequence.SSRR, Priority.ANDROID_BASED_HIGH);
-            break;
-        case SSRR_HI_PRIORITY_JAVA:
-            testThread(model, Sequence.SSRR, Priority.JAVA_BASED_HIGH);
-            break;
+        showTestStartedNotification();
+        for (Arhitecture arhitecture : model.getArhitectures()) {
+            switch (arhitecture) {
+            case SRSR_STANDARD_PRIORITY:
+                testThread(model, Sequence.SRSR, Priority.JAVA_BASED_NORMAL, arhitecture);
+                break;
+            case SSRR_STANDARD_PRIORITY:
+                testThread(model, Sequence.SSRR, Priority.JAVA_BASED_NORMAL, arhitecture);
+                break;
+            case SRSR_HI_PRIORITY_ANDROID:
+                testThread(model, Sequence.SRSR, Priority.ANDROID_BASED_HIGH, arhitecture);
+                break;
+            case SRSR_HI_PRIORITY_JAVA:
+                testThread(model, Sequence.SRSR, Priority.JAVA_BASED_HIGH, arhitecture);
+                break;
+            case SSRR_HI_PRIORITY_ANDROID:
+                testThread(model, Sequence.SSRR, Priority.ANDROID_BASED_HIGH, arhitecture);
+                break;
+            case SSRR_HI_PRIORITY_JAVA:
+                testThread(model, Sequence.SSRR, Priority.JAVA_BASED_HIGH, arhitecture);
+                break;
+            }
         }
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(!emptyFutures()) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
+                    }
+                }
+                Log.d(TAG, "All threads done");
+                showTestDoneNotification();
+            }
+            private boolean emptyFutures() {
+                @SuppressWarnings("rawtypes")
+                List<Future> toRemove = new ArrayList<Future>();
+                for( @SuppressWarnings("rawtypes") Future future : futures) {
+                    try {
+                        if(future.get() == null ) {
+                            toRemove.add(future);
+                        }
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
+                        e.getMessage();
+                    } catch (ExecutionException e) {
+                        Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
+                    }
+                }
+                futures.removeAll(toRemove);
+                return futures.isEmpty();
+            }
+        });
+        thread.start();
     }
 
-    private void executeSequencSRSR(final int repeats, TestResults testResults) throws MicrocontrollerException {
-        for (int i = 0; i < repeats; i++) {
-            long duration = System.nanoTime();
-            for (Microcontroller micro : microcontrollers) {
-                micro.sendStreamPacket(null);
-                micro.receiveStreamPacket();
-            }
-            byte[] packet = microcontrollers[0].getLastReceivedStreamPacket();
-            testResults.addDuration(i, Packet.shortFromBytes(packet[0], packet[1]),
-                    System.nanoTime() - duration,
-                    Packet.shortFromBytes(packet[4], packet[5]), 0);
-        }
-    }
-
-    private void executeSequenceSSRR(final int repeats, TestResults testResults) throws MicrocontrollerException {
-        for (int i = 0; i < repeats; i++) {
-            long duration = System.nanoTime();
-            for (Microcontroller micro : microcontrollers) {
-                micro.sendStreamPacket(null);
-            }
-            for (Microcontroller micro : microcontrollers) {
-                micro.receiveStreamPacket();
-            }
-            byte[] packet = microcontrollers[0].getLastReceivedStreamPacket();
-            testResults.addDuration(i, Packet.shortFromBytes(packet[0], packet[1]),
-                    System.nanoTime() - duration,
-                    Packet.shortFromBytes(packet[4], packet[5]), 0);
-        }
-    }
-
-    private void testThread(final DetailsViewModel model, final Sequence sequence, final Priority priority) {
+    private void testThread(final DetailsViewModel model, final Sequence sequence, final Priority priority, final Arhitecture arhitecture) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.d(TAG, "Starting test: Java thread sequence " + sequence.name() + " priority: " + priority.name());
-                showTestStartedNotification();
                 if(priority == Priority.ANDROID_BASED_HIGH){
                     Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
                 }
@@ -258,7 +271,7 @@ public class UsbService extends Service {
                     for (int setreamInSize : model.getStreamInSize()) {
                         System.gc();
                         switchMicrocontrollersToStreamMode((short) model.getStreamOutSize(), (short) setreamInSize);
-                        TestResults testResults = new TestResults(model.getStreamOutSize(), setreamInSize, repeats, model.getArhitecture());
+                        TestResults testResults = new TestResults(model.getStreamOutSize(), setreamInSize, repeats, arhitecture);
                         switch (sequence){
                         case SRSR:
                             executeSequencSRSR(repeats, testResults);
@@ -277,13 +290,42 @@ public class UsbService extends Service {
                     Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
                 }
                 Log.d(TAG, "Test done: Java thread sequence " + sequence.name() + " priority: " + priority.name());
-                showTestDoneNotification();
             }
         });
         if(priority == Priority.JAVA_BASED_HIGH){
             thread.setPriority(Thread.MAX_PRIORITY);
         }
-        thread.start();
+        futures.add(executorService.submit(thread));
+    }
+
+    private void executeSequencSRSR(final int repeats, TestResults testResults) throws MicrocontrollerException {
+        for (int i = 0; i < repeats; i++) {
+            final long before = System.nanoTime();
+            for (Microcontroller micro : microcontrollers) {
+                micro.sendStreamPacket(null);
+                micro.receiveStreamPacket();
+            }
+            updateTestResults(i, System.nanoTime() - before, microcontrollers[0].getLastReceivedStreamPacket(), testResults);
+        }
+    }
+
+    private void executeSequenceSSRR(final int repeats, TestResults testResults) throws MicrocontrollerException {
+        for (int i = 0; i < repeats; i++) {
+            long duration = System.nanoTime();
+            for (Microcontroller micro : microcontrollers) {
+                micro.sendStreamPacket(null);
+            }
+            for (Microcontroller micro : microcontrollers) {
+                micro.receiveStreamPacket();
+            }
+            updateTestResults(i, System.nanoTime() - duration, microcontrollers[0].getLastReceivedStreamPacket(), testResults);
+        }
+    }
+
+    private void updateTestResults(final int index, final long duration, final byte[] packet, TestResults testResults){
+        testResults.addDuration(index, Packet.shortFromBytes(packet[0], packet[1]),
+                duration,
+                Packet.shortFromBytes(packet[4], packet[5]), 0);
     }
 
     private void saveTestResults(TestResults measuredData) {

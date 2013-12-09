@@ -12,7 +12,7 @@ public class DetailsViewModel {
     private int streamOutSize;
     private int[] streamInSize;
     private String device;
-    private Arhitecture arhitecture;
+    private Arhitecture[] arhitectures;
     private boolean saveLogs;
 
     public DetailsViewModel() {
@@ -21,7 +21,7 @@ public class DetailsViewModel {
         streamOutSize = 16;
         streamInSize = new int[]{48};
         device = null;
-        arhitecture = Arhitecture.SRSR_STANDARD_PRIORITY;
+        arhitectures = new Arhitecture[]{Arhitecture.SRSR_STANDARD_PRIORITY};
         saveLogs = false;
     }
 
@@ -49,11 +49,11 @@ public class DetailsViewModel {
     public void setDevice(String device) {
         this.device = device;
     }
-    public Arhitecture getArhitecture() {
-        return arhitecture;
+    public Arhitecture[] getArhitectures() {
+        return arhitectures;
     }
-    public void setArhitecture(Arhitecture arhitecture) {
-        this.arhitecture = arhitecture;
+    public void setArhitectures(Arhitecture[] arhitectures) {
+        this.arhitectures = arhitectures;
     }
     public boolean isSaveLogs() {
         return saveLogs;

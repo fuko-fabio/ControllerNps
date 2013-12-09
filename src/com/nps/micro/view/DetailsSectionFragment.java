@@ -146,24 +146,47 @@ public class DetailsSectionFragment extends BaseSectionFragment {
         final TextView arhitectureText = (TextView) rootView.findViewById(R.id.selectedArhitectureText);
         String defaultArhitecture = getResources().getStringArray(R.array.arhitecture_array)[0];
         arhitectureText.setText(defaultArhitecture);
-        model.setArhitecture(Arhitecture.fromName(defaultArhitecture));
+        model.setArhitectures(new Arhitecture[]{Arhitecture.SRSR_STANDARD_PRIORITY});
         Button arhitectureButton = (Button) rootView.findViewById(R.id.selectArhitectureButton);
-        arhitectureButton.setOnClickListener(new OnClickListener(){
+        arhitectureButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle(R.string.arhitecture)
-                       .setItems(R.array.arhitecture_array, new DialogInterface.OnClickListener() {
-                           public void onClick(DialogInterface dialog, int which) {
-                               String selectedArhitecture = getResources().getStringArray(R.array.arhitecture_array)[which];
-                               arhitectureText.setText(selectedArhitecture);
-                               model.setArhitecture(Arhitecture.fromName(selectedArhitecture));
-                               dialog.dismiss();
-                       }
-                });
-                AlertDialog alert = builder.create();
-                alert.show();
-            }});
+                final List<String> selectedItems = new ArrayList<String>();
+                new AlertDialog.Builder(getActivity())
+                        .setTitle(R.string.arhitecture)
+                        .setMultiChoiceItems(R.array.arhitecture_array, null,
+                                new DialogInterface.OnMultiChoiceClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                        String item = getResources().getStringArray(
+                                                R.array.arhitecture_array)[which];
+                                        if (isChecked) {
+                                            selectedItems.add(item);
+                                        } else if (selectedItems.contains(item)) {
+                                            selectedItems.remove(item);
+                                        }
+                                    }
+                                })
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                arhitectureText.setText(selectedItems.toString());
+                                List<Arhitecture> architecturesList = new ArrayList<Arhitecture>();
+                                for (String item : selectedItems) {
+                                    architecturesList.add(Arhitecture.fromName(item));
+                                }
+                                model.setArhitectures(architecturesList
+                                        .toArray(new Arhitecture[architecturesList.size()]));
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        }).create().show();
+            }
+        });
 
         // TODO Devices list
         final TextView deviceText = (TextView) rootView.findViewById(R.id.selectedDeviceText);
