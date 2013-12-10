@@ -115,7 +115,7 @@ public class MainActivity extends FragmentActivity {
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
             microUsbService = ((UsbService.LocalBinder) service).getService();
-
+            mSectionsPagerAdapter.updateAvailabeMicrocontrollers(microUsbService.getAvailableMicrocontrollers());
             messengerService = new Messenger(((UsbService.LocalBinder) service).getMessenger());
             try {
                 Message msg = Message.obtain(null, UsbService.MSG_REGISTER_CLIENT);
@@ -352,10 +352,14 @@ public class MainActivity extends FragmentActivity {
         private CharSequence[] titles = new CharSequence[] { getString(R.string.title_home),
                 getString(R.string.title_details), getString(R.string.title_graph) };
 
+        private HomeSectionFragment homeFragment;
+        private DetailsSectionFragment detailsFragment;
+        private GraphSectionFragment graphFragment;
+
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
-            HomeSectionFragment homeFragment = new HomeSectionFragment();
-            DetailsSectionFragment detailsFragment = new DetailsSectionFragment();
+            homeFragment = new HomeSectionFragment();
+            detailsFragment = new DetailsSectionFragment();
             detailsFragment.setListener(new DetailsFragmentListener() {
                 @Override
                 public void onRunUsbTest(DetailsViewModel model) {
@@ -372,7 +376,7 @@ public class MainActivity extends FragmentActivity {
                     }
                 }
             });
-            GraphSectionFragment graphFragment = new GraphSectionFragment();
+            graphFragment = new GraphSectionFragment();
             fragments = new Fragment[] { homeFragment, detailsFragment, graphFragment };
         }
 
@@ -389,6 +393,10 @@ public class MainActivity extends FragmentActivity {
         @Override
         public CharSequence getPageTitle(int position) {
             return titles[position];
+        }
+
+        public void updateAvailabeMicrocontrollers(List<String> microcontrollers) {
+            detailsFragment.setAvailableMicrocontrollers(microcontrollers);
         }
     }
 }

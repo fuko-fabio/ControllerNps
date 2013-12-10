@@ -21,10 +21,6 @@ public class Microcontroller {
     private byte[] testStreamInBuffer;
     private byte[] testStreamOutBuffer;
 
-    public Microcontroller(UsbGate usbGate) {
-        this.usbGate = usbGate;
-    }
-
     public Microcontroller(UsbManager usbManager, UsbDevice device)
             throws IllegalArgumentException, UsbGateException {
         usbGate = new UsbGate(usbManager, device);
@@ -181,6 +177,10 @@ public class Microcontroller {
 
     public PacketSize getCurrentPacketSize() {
         return packetSize;
+    }
+
+    public String getDeviceName() {
+        return usbGate.getDeviceName();
     }
 
     private void updatePacketSize(byte[] inputBuffer) {

@@ -89,6 +89,15 @@ public class UsbGate {
     }
 
     /**
+     * Returns the name of the device. In the standard implementation, this is the path of the device file for the device in the usbfs file system.
+     *
+     * @return the device name
+     */
+    public String getDeviceName() {
+        return mUsbDevice.getDeviceName();
+    }
+
+    /**
      * Send synchronous data via USB
      * 
      * @param packet generated packet to sent

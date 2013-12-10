@@ -27,6 +27,7 @@ public class DetailsSectionFragment extends BaseSectionFragment {
 
     private DetailsFragmentListener listener;
     private DetailsViewModel model;
+    private List<String> availableMicrocontrollers;
 
     public DetailsSectionFragment() {
         this.layout = R.layout.details;
@@ -152,14 +153,16 @@ public class DetailsSectionFragment extends BaseSectionFragment {
             @Override
             public void onClick(View v) {
                 final List<String> selectedItems = new ArrayList<String>();
+                final String[] arhitecturesArray = getResources().getStringArray(R.array.arhitecture_array);
+                boolean[] checkedItems = new boolean[arhitecturesArray.length];
+                checkedItems[0] = true;
                 new AlertDialog.Builder(getActivity())
                         .setTitle(R.string.arhitecture)
-                        .setMultiChoiceItems(R.array.arhitecture_array, null,
+                        .setMultiChoiceItems(arhitecturesArray, checkedItems,
                                 new DialogInterface.OnMultiChoiceClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                                        String item = getResources().getStringArray(
-                                                R.array.arhitecture_array)[which];
+                                        String item = arhitecturesArray[which];
                                         if (isChecked) {
                                             selectedItems.add(item);
                                         } else if (selectedItems.contains(item)) {
@@ -171,6 +174,11 @@ public class DetailsSectionFragment extends BaseSectionFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
                                 arhitectureText.setText(selectedItems.toString());
+                                if(arhitecturesArray.length == selectedItems.size()){
+                                    arhitectureText.setText(getResources().getString(R.string.all));
+                                } else {
+                                    arhitectureText.setText(selectedItems.toString());
+                                }
                                 List<Arhitecture> architecturesList = new ArrayList<Arhitecture>();
                                 for (String item : selectedItems) {
                                     architecturesList.add(Arhitecture.fromName(item));
@@ -188,24 +196,49 @@ public class DetailsSectionFragment extends BaseSectionFragment {
             }
         });
 
-        // TODO Devices list
         final TextView deviceText = (TextView) rootView.findViewById(R.id.selectedDeviceText);
         deviceText.setText("All");
         Button deviceButton = (Button) rootView.findViewById(R.id.selectDeviceButton);
-        deviceButton.setEnabled(false);
         deviceButton.setOnClickListener(new OnClickListener(){
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle(R.string.arhitecture)
-                       .setItems(R.array.arhitecture_array, new DialogInterface.OnClickListener() {
-                           public void onClick(DialogInterface dialog, int which) {
-                               deviceText.setText(getResources().getStringArray(R.array.arhitecture_array)[which]);
-                               dialog.dismiss();
-                       }
-                });
-                AlertDialog alert = builder.create();
-                alert.show();
+                final List<String> selectedItems = new ArrayList<String>();
+                final String[] devicesArray = availableMicrocontrollers.toArray(new String[availableMicrocontrollers.size()]);
+                boolean[] checkedItems = new boolean[devicesArray.length];
+                for(int i = 0; i < checkedItems.length; i++){
+                    checkedItems[i] = true;
+                }
+                new AlertDialog.Builder(getActivity())
+                        .setTitle(R.string.device)
+                        .setMultiChoiceItems(devicesArray, checkedItems,
+                                new DialogInterface.OnMultiChoiceClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                        String item = devicesArray[which];
+                                        if (isChecked) {
+                                            selectedItems.add(item);
+                                        } else if (selectedItems.contains(item)) {
+                                            selectedItems.remove(item);
+                                        }
+                                    }
+                                })
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                if(availableMicrocontrollers.size() == selectedItems.size()){
+                                    deviceText.setText(getResources().getString(R.string.all));
+                                } else {
+                                    deviceText.setText(selectedItems.toString());
+                                }
+                                model.setDevices(selectedItems.toArray(new String[selectedItems.size()]));
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        }).create().show();
             }});
 
         CheckBox saveLogsCheckBox = (CheckBox) rootView.findViewById(R.id.saveLogsCheckBox);
@@ -226,5 +259,9 @@ public class DetailsSectionFragment extends BaseSectionFragment {
             }});
 
         return rootView;
+    }
+
+    public void setAvailableMicrocontrollers(List<String> availableMicrocontrollers) {
+        this.availableMicrocontrollers = availableMicrocontrollers;
     }
 }

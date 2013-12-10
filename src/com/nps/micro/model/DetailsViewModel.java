@@ -11,7 +11,7 @@ public class DetailsViewModel {
     private int repeats;
     private int streamOutSize;
     private int[] streamInSize;
-    private String device;
+    private String[] devices;
     private Arhitecture[] arhitectures;
     private boolean saveLogs;
 
@@ -20,7 +20,7 @@ public class DetailsViewModel {
         repeats = 1;
         streamOutSize = 16;
         streamInSize = new int[]{48};
-        device = null;
+        devices = null;
         arhitectures = new Arhitecture[]{Arhitecture.SRSR_STANDARD_PRIORITY};
         saveLogs = false;
     }
@@ -43,11 +43,11 @@ public class DetailsViewModel {
     public void setStreamInSize(int[] streamInSize) {
         this.streamInSize = streamInSize;
     }
-    public String getDevice() {
-        return device;
+    public String[] getDevices() {
+        return devices;
     }
-    public void setDevice(String device) {
-        this.device = device;
+    public void setDevices(String[] devices) {
+        this.devices = devices;
     }
     public Arhitecture[] getArhitectures() {
         return arhitectures;

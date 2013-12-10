@@ -1,6 +1,7 @@
 package com.nps.micro;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +57,9 @@ public class UsbService extends Service {
 
     private UsbManager usbManager;
     private List<UsbDevice> devices = new ArrayList<UsbDevice>();
-    private Microcontroller[] microcontrollers;
+    private List<Microcontroller> availableMicrocontrollers = new ArrayList<Microcontroller>();
+    private List<String> microcontrollersNames = new ArrayList<String>();
+    private Microcontroller[] selectedMicrocontrollers;
 
      // Keeps track of all current registered clients.
     static ArrayList<Messenger> mClients = new ArrayList<Messenger>();
@@ -90,6 +93,10 @@ public class UsbService extends Service {
         }
     }
 
+    public List<String> getAvailableMicrocontrollers() {
+        return microcontrollersNames;
+    }
+
     @Override
     public void onCreate() {
         Log.d(TAG, "Creating service...");
@@ -104,7 +111,6 @@ public class UsbService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Received start id " + startId + ": " + intent);
         int numberOfDevices = intent.getIntExtra("numberOfDevices", 0);
-        microcontrollers = new Microcontroller[numberOfDevices];
         for (int i = 0; i < numberOfDevices; i++) {
             devices.add((UsbDevice) intent.getParcelableExtra("device" + i));
         }
@@ -121,7 +127,7 @@ public class UsbService extends Service {
     }
 
     private void closeMicrocontrollers() {
-        for( Microcontroller micro : microcontrollers) {
+        for( Microcontroller micro : availableMicrocontrollers) {
             micro.closeConnection();
         }
     }
@@ -187,7 +193,8 @@ public class UsbService extends Service {
             Microcontroller micro;
             try {
                 micro = new Microcontroller(usbManager, devices.get(i));
-                microcontrollers[i] = micro;
+                availableMicrocontrollers.add(micro);
+                microcontrollersNames.add(micro.getDeviceName());
             } catch (UsbGateException e) {
                 Log.e(TAG, "Cannot open USB connection cause: " + e.getMessage());
             } catch (IllegalArgumentException e) {
@@ -201,6 +208,7 @@ public class UsbService extends Service {
     
     public void testCommunication(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
         showTestStartedNotification();
+        filterSelectedMicrocontrollers(model);
         for (Arhitecture arhitecture : model.getArhitectures()) {
             switch (arhitecture) {
             case SRSR_STANDARD_PRIORITY:
@@ -258,6 +266,18 @@ public class UsbService extends Service {
         thread.start();
     }
 
+    private void filterSelectedMicrocontrollers(DetailsViewModel model) {
+        List<String> selectedDevices = Arrays.asList(model.getDevices());
+        selectedMicrocontrollers = new Microcontroller[selectedDevices.size()];
+        int index = 0;
+        for( Microcontroller microcontroller : availableMicrocontrollers) {
+            if(selectedDevices.contains(microcontroller.getDeviceName())) {
+                selectedMicrocontrollers[index] = microcontroller;
+                index++;
+            }
+        }
+    }
+
     private void testThread(final DetailsViewModel model, final Sequence sequence, final Priority priority, final Arhitecture arhitecture) {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -301,24 +321,24 @@ public class UsbService extends Service {
     private void executeSequencSRSR(final int repeats, TestResults testResults) throws MicrocontrollerException {
         for (int i = 0; i < repeats; i++) {
             final long before = System.nanoTime();
-            for (Microcontroller micro : microcontrollers) {
+            for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.sendStreamPacket(null);
                 micro.receiveStreamPacket();
             }
-            updateTestResults(i, System.nanoTime() - before, microcontrollers[0].getLastReceivedStreamPacket(), testResults);
+            updateTestResults(i, System.nanoTime() - before, selectedMicrocontrollers[0].getLastReceivedStreamPacket(), testResults);
         }
     }
 
     private void executeSequenceSSRR(final int repeats, TestResults testResults) throws MicrocontrollerException {
         for (int i = 0; i < repeats; i++) {
             long duration = System.nanoTime();
-            for (Microcontroller micro : microcontrollers) {
+            for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.sendStreamPacket(null);
             }
-            for (Microcontroller micro : microcontrollers) {
+            for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.receiveStreamPacket();
             }
-            updateTestResults(i, System.nanoTime() - duration, microcontrollers[0].getLastReceivedStreamPacket(), testResults);
+            updateTestResults(i, System.nanoTime() - duration, selectedMicrocontrollers[0].getLastReceivedStreamPacket(), testResults);
         }
     }
 
@@ -338,14 +358,14 @@ public class UsbService extends Service {
     }
 
     private void switchMicrocontrollersToStreamMode(short streamOutSize, short streamInSize) throws MicrocontrollerException {
-        for (Microcontroller micro : microcontrollers) {
+        for (Microcontroller micro : availableMicrocontrollers) {
             micro.setStreamParameters(streamOutSize, streamInSize);
             micro.switchToStreamMode();
         }
     }
 
     private void switchMicrocontrollersToCommandMode() throws MicrocontrollerException {
-        for (Microcontroller micro : microcontrollers) {
+        for (Microcontroller micro : availableMicrocontrollers) {
             micro.switchToCommandMode();
         }
     }
