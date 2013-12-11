@@ -7,18 +7,24 @@ import com.nps.usb.microcontroller.Arhitecture;
  */
 public class TestResults {
 
-    private final int streamOutSize;
-    private final int streamInSize;
+    private final short streamOutSize;
+    private final short streamInSize;
     private final int repeats;
+    private final short numberOfDevices;
     private final Arhitecture arhitecture;
-    private long[][] durations;
+    private final short[] index;
+    private final long[] duration;
+    private final short[] hwDuration;
 
-    public TestResults(int streamOutSize, int streamInSize, int repeats, Arhitecture arhitecture) {
+    public TestResults(short streamOutSize, short streamInSize, int repeats, Arhitecture arhitecture, short numberOfDevices) {
         this.streamOutSize = streamOutSize;
         this.streamInSize = streamInSize;
         this.repeats = repeats;
-        this.durations = new long[repeats][4];
+        this.index = new short[repeats];
+        this.duration = new long[repeats];
+        this.hwDuration = new short[repeats];
         this.arhitecture = arhitecture;
+        this.numberOfDevices = numberOfDevices;
     }
 
     public int getStreamOutSize() {
@@ -37,11 +43,10 @@ public class TestResults {
         return arhitecture;
     }
 
-    public void addDuration(final int currentIndex, final int hardwareIndex, final long duration, final int hardwareDuration, final int reserved) {
-        this.durations[currentIndex][0] = hardwareIndex;
-        this.durations[currentIndex][1] = duration;
-        this.durations[currentIndex][2] = hardwareDuration;
-        this.durations[currentIndex][3] = reserved;
+    public void addDuration(final int currentIndex, final short hardwareIndex, final long duration, final short hardwareDuration) {
+        this.index[currentIndex] = hardwareIndex;
+        this.duration[currentIndex] = duration;
+        this.hwDuration[currentIndex] = hardwareDuration;
     }
 
     public String toMatlabFileFormat() {
@@ -51,13 +56,13 @@ public class TestResults {
                .append("dane.wartosci = [\n");
         double durationSum = 0;
         double time;
-        for (long[] d : durations) {
-            time = (double)d[1]/1000000;
+        for(int i = 0; i<repeats;i++){
+            time = (double)duration[i]/1000000;
             durationSum += time;
-            builder.append(d[0] + ", " +
+            builder.append(index[i] + ", " +
                            time + ", " +
-                           d[2] + ", " +
-                           d[3] + ";\n");
+                           hwDuration[i] + ", " +
+                           0 + ";\n");
         }
         builder.append("];\n")
                .append("dane.ileRazy = " + repeats + ";\n")
@@ -65,5 +70,9 @@ public class TestResults {
                .append("dane.sredniaDT = " + durationSum/repeats + ";\n")
                .append("dane.nazwa = '" + streamOutSize + "B/" + streamInSize + "B/x" + repeats + "';\n");
         return builder.toString();
+    }
+
+    public short getNumberOfDevices() {
+        return numberOfDevices;
     }
 }

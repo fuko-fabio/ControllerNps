@@ -9,8 +9,8 @@ import com.nps.usb.microcontroller.Arhitecture;
 public class DetailsViewModel {
 
     private int repeats;
-    private int streamOutSize;
-    private int[] streamInSize;
+    private short streamOutSize;
+    private short[] streamInSize;
     private String[] devices;
     private Arhitecture[] arhitectures;
     private boolean saveLogs;
@@ -19,7 +19,7 @@ public class DetailsViewModel {
         super();
         repeats = 1;
         streamOutSize = 16;
-        streamInSize = new int[]{48};
+        streamInSize = new short[]{48};
         devices = null;
         arhitectures = new Arhitecture[]{Arhitecture.SRSR_STANDARD_PRIORITY};
         saveLogs = false;
@@ -31,16 +31,16 @@ public class DetailsViewModel {
     public void setRepeats(int repeats) {
         this.repeats = repeats;
     }
-    public int getStreamOutSize() {
+    public short getStreamOutSize() {
         return streamOutSize;
     }
     public void setStreamOutSize(short streamOutSize) {
         this.streamOutSize = streamOutSize;
     }
-    public int[] getStreamInSize() {
+    public short[] getStreamInSizes() {
         return streamInSize;
     }
-    public void setStreamInSize(int[] streamInSize) {
+    public void setStreamInSize(short[] streamInSize) {
         this.streamInSize = streamInSize;
     }
     public String[] getDevices() {

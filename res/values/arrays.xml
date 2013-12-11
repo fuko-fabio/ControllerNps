@@ -57,6 +57,10 @@
         <item>Java Hi Priority Sequence SSRR</item>
         <item>Android Hi Priority Sequence SRSR</item>
         <item>Android Hi Priority Sequence SSRR</item>
+        <item>SWR Event Driven Sequence SRSR</item>
+        <item>SWR Event Driven Sequence SSRR</item>
+        <item>SRW Event Driven Sequence SRSR</item>
+        <item>SRW Event Driven Sequence SSRR</item>
     </string-array>
 
 </resources>

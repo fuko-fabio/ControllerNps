@@ -11,7 +11,11 @@ public enum Arhitecture {
     SRSR_HI_PRIORITY_JAVA("Java Hi Priority Sequence SRSR"),
     SSRR_HI_PRIORITY_JAVA("Java Hi Priority Sequence SSRR"),
     SRSR_HI_PRIORITY_ANDROID("Android Hi Priority Sequence SRSR"),
-    SSRR_HI_PRIORITY_ANDROID("Android Hi Priority Sequence SSRR");
+    SSRR_HI_PRIORITY_ANDROID("Android Hi Priority Sequence SSRR"),
+    SWRWSWRW_EVENT_DRIVEN("SWR Event Driven Sequence SRSR"),
+    SWSWRWRW_EVENT_DRIVEN("SWR Event Driven Sequence SSRR"),
+    SRWWSRWW_EVENT_DRIVEN("SRW Event Driven Sequence SRSR"),
+    SSRRWWWW_EVENT_DRIVEN("SRW Event Driven Sequence SSRR");
 
     private String name;
 

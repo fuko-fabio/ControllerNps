@@ -31,7 +31,8 @@ public class ExternalFile {
     public void save(TestResults measuredData) throws ExternalStorageException {
         if (ExternalStorage.isAvailable() && ExternalStorage.isWritable()) {
             File dir = new File(ExternalStorage.getSdCardPath() + logsCatalog + File.separator
-                    + getDate() + File.separator + measuredData.getArhitecture().name());
+                    + getDate() + "_D" + measuredData.getNumberOfDevices() + File.separator
+                    + measuredData.getArhitecture().name());
             dir.mkdirs();
             File logsFile = new File(dir + File.separator + logsFilename(measuredData) + EXTENSION);
             try {

@@ -26,8 +26,10 @@ public class UsbGate {
     private UsbEndpoint mUsbEndpointOut;
     private UsbDeviceConnection mUsbConnection;
     private UsbManager mUsbManager;
-    private UsbRequest mUsbRequest;
+    private UsbRequest sendUsbRequest;
+    private UsbRequest receiveUsbRequest;
 
+    
     /**
      * @param device USB device object
      * @throws IllegalArgumentException
@@ -66,6 +68,8 @@ public class UsbGate {
             throw new UsbGateException("Endpoints not found!");
         }
         mUsbDevice = device;
+        sendUsbRequest = new UsbRequest();
+        receiveUsbRequest = new UsbRequest();
     }
 
     /**
@@ -154,7 +158,7 @@ public class UsbGate {
      * @param buffer received data
      * @param timeout
      * @return length of data transferred (or zero) for success, or negative value for failure 
-     * @throws IllegalAccessException  if USB interface cannot be claimed
+     * @throws IllegalAccessException if USB interface cannot be claimed
      */
     public long receive(byte[] buffer, int timeout) throws IllegalAccessException {
         if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
@@ -163,45 +167,51 @@ public class UsbGate {
     }
 
     /**
-     * Send asynchronous data via USB
+     * Initializes the sern/read request so it can read or write data on the given endpoint.
      * 
-     * @param buffer data to send
-     * @return true if the operation succeeded
-     * @throws IllegalAccessException if the USB request was not opened or if USB interface cannot be claimed
+     * @throws IllegalAccessException if USB interface cannot be claimed or usb request cannot be initialized
      */
-    public boolean sendAsync(byte[] buffer) throws IllegalAccessException {
+    public void initAsyncUsbRequests() throws IllegalAccessException {
         if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
             throw new IllegalAccessException("USB interface cannot be claimed ");
-        if (!mUsbRequest.initialize(mUsbConnection, mUsbEndpointOut))
+        if (!sendUsbRequest.initialize(mUsbConnection, mUsbEndpointOut))
             throw new IllegalAccessException("USB request cannot be opened");
+        if (!receiveUsbRequest.initialize(mUsbConnection, mUsbEndpointIn))
+            throw new IllegalAccessException("USB request cannot be opened");
+    }
 
-        boolean sent = mUsbRequest.queue(ByteBuffer.wrap(buffer), buffer.length);
-
-        mUsbRequest.cancel();
-        mUsbRequest.close();
-        return sent;
+    /**
+     * Send asynchronous data via USB
+     * Initialize async usb requests before: initAsyncUsbRequests()
+     * 
+     * @param buffer data to send
+     * @return true if the queueing operation succeeded 
+     */
+    public boolean sendAsync(byte[] buffer) {
+        return sendUsbRequest.queue(ByteBuffer.wrap(buffer), buffer.length);
     }
 
     /**
      * Read asynchronous data from USB
+     * Initialize async usb requests before: initAsyncUsbRequests()
      * 
      * @param buffer received data
-     * @return true if the operation succeeded
-     * @throws IllegalAccessException if the USB request was not opened or if USB interface cannot be claimed
+     * @return true if the queueing operation succeeded 
      */
-    public boolean receiveAsync(byte[] buffer) throws IllegalAccessException {
-        if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
-            throw new IllegalAccessException("USB interface cannot be claimed ");
-        if (!mUsbRequest.initialize(mUsbConnection, mUsbEndpointIn))
-            throw new IllegalAccessException("USB request cannot be opened");
+    public boolean receiveAsync(byte[] buffer) {
+        return receiveUsbRequest.queue(ByteBuffer.wrap(buffer), buffer.length);
+    }
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(buffer.length);
-        boolean recived = mUsbRequest.queue(byteBuffer, buffer.length);
-        buffer = byteBuffer.array();
-
-        mUsbRequest.cancel();
-        mUsbRequest.close();
-        return recived;
+    /**
+     * Waits for the result of a queue(ByteBuffer, int) operation Note that this
+     * may return requests queued on multiple UsbEndpoints. When multiple
+     * endpoints are in use, getEndpoint() and getClientData() can be useful in
+     * determining how to process the result of this function.
+     * 
+     * @return a completed USB request, or null if an error occurred
+     */
+    public UsbRequest asyncRequestWait() {
+        return mUsbConnection.requestWait();
     }
 
     /**
@@ -218,7 +228,10 @@ public class UsbGate {
 
         if (!mUsbConnection.releaseInterface(mUsbInterface))
             return false;
-
+        sendUsbRequest.cancel();
+        sendUsbRequest.close();
+        receiveUsbRequest.cancel();
+        receiveUsbRequest.close();
         mUsbConnection.close();
         return true;
     }
