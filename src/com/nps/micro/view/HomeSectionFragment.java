@@ -1,6 +1,5 @@
 package com.nps.micro.view;
 
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,8 +13,7 @@ public class HomeSectionFragment extends BaseSectionFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+    protected View buildRootView(LayoutInflater inflater, ViewGroup container) {
         View rootView = inflater.inflate(layout, container, false);
         return rootView;
     }

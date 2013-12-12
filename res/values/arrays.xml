@@ -50,7 +50,7 @@
         <item>7950</item>
     </string-array>
 
-    <string-array name="arhitecture_array">
+    <string-array name="architecture_array">
         <item>Standard Priority Sequence SRSR</item>
         <item>Standard Priority Sequence SSRR</item>
         <item>Java Hi Priority Sequence SRSR</item>

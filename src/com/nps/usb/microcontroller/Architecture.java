@@ -5,7 +5,7 @@ package com.nps.usb.microcontroller;
  * @author Norbert Pabian
  * www.npsoftware.pl
  */
-public enum Arhitecture {
+public enum Architecture {
     SRSR_STANDARD_PRIORITY("Standard Priority Sequence SRSR"),
     SSRR_STANDARD_PRIORITY("Standard Priority Sequence SSRR"),
     SRSR_HI_PRIORITY_JAVA("Java Hi Priority Sequence SRSR"),
@@ -19,7 +19,7 @@ public enum Arhitecture {
 
     private String name;
 
-    Arhitecture(String name) {
+    Architecture(String name) {
         this.name = name;
     }
 
@@ -27,12 +27,12 @@ public enum Arhitecture {
         return this.name;
     }
 
-    public static Arhitecture fromName(String name) {
-        Arhitecture[] arhitectures = Arhitecture.values();
+    public static Architecture fromName(String name) {
+        Architecture[] arhitectures = Architecture.values();
         for (int i = 0; i < arhitectures.length; i++) {
             if (arhitectures[i].toString().equalsIgnoreCase(name))
                 return arhitectures[i];
         }
-        return Arhitecture.SRSR_STANDARD_PRIORITY;
+        return Architecture.SRSR_STANDARD_PRIORITY;
     }
 }

@@ -28,14 +28,16 @@
                 android:id="@+id/repeatsInput"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.47"
+                android:layout_weight="0.71"
                 android:inputType="numberSigned" />
 
             <Button
                 android:id="@+id/setRepeatsButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0.15"
                 android:text="@string/select" />
+
         </LinearLayout>
 
         <TextView
@@ -46,7 +48,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="match_parent" >
 
             <EditText
                 android:id="@+id/packetOutSizeInput"
@@ -59,7 +61,9 @@
                 android:id="@+id/setOutSizeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0.15"
                 android:text="@string/select" />
+
         </LinearLayout>
 
         <TextView
@@ -70,20 +74,23 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="101dp" >
 
             <EditText
                 android:id="@+id/packetInSizeInput"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.71"
-                android:inputType="text" />
+                android:inputType="text"
+                android:scrollbars = "horizontal" />
 
             <Button
                 android:id="@+id/setInSizeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0.15"
                 android:text="@string/select" />
+
         </LinearLayout>
     </LinearLayout>
 
@@ -100,44 +107,52 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:layout_weight="0.21" >
 
             <TextView
                 android:id="@+id/selectedDeviceText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.71"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:scrollbars = "vertical" />
 
             <Button
                 android:id="@+id/selectDeviceButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0.15"
                 android:text="@string/select" />
+
         </LinearLayout>
 
         <TextView
-            android:id="@+id/arhitectureLabel"
+            android:id="@+id/architectureLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/arhitecture" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:layout_weight="0.71" >
 
             <TextView
-                android:id="@+id/selectedArhitectureText"
+                android:id="@+id/selectedArchitectureText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.71"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:scrollbars = "vertical" />
 
             <Button
                 android:id="@+id/selectArhitectureButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0.15"
                 android:text="@string/select" />
+
         </LinearLayout>
 
         <LinearLayout
@@ -149,13 +164,15 @@
                 android:id="@+id/saveLogsCheckBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0.75"
                 android:text="@string/save_logs" />
 
             <Button
                 android:id="@+id/runButton"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
+                android:layout_weight="0.30"
                 android:text="@string/run" />
 
         </LinearLayout>

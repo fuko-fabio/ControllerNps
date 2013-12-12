@@ -31,9 +31,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.widget.Toast;
 
-import com.nps.micro.model.DetailsViewModel;
-import com.nps.micro.view.DetailsFragmentListener;
-import com.nps.micro.view.DetailsSectionFragment;
+import com.nps.micro.model.TestsViewModel;
+import com.nps.micro.view.TestsFragmentListener;
+import com.nps.micro.view.TestsSectionFragment;
 import com.nps.micro.view.Dialogs;
 import com.nps.micro.view.GraphSectionFragment;
 import com.nps.micro.view.HomeSectionFragment;
@@ -349,20 +349,19 @@ public class MainActivity extends FragmentActivity {
 
         private Fragment[] fragments;
 
-        private CharSequence[] titles = new CharSequence[] { getString(R.string.title_home),
-                getString(R.string.title_details), getString(R.string.title_graph) };
+        private CharSequence[] titles = new CharSequence[] { getString(R.string.title_tests),
+                getString(R.string.title_home), getString(R.string.title_graph) };
 
+        private TestsSectionFragment testsFragment;
         private HomeSectionFragment homeFragment;
-        private DetailsSectionFragment detailsFragment;
         private GraphSectionFragment graphFragment;
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
-            homeFragment = new HomeSectionFragment();
-            detailsFragment = new DetailsSectionFragment();
-            detailsFragment.setListener(new DetailsFragmentListener() {
+            testsFragment = new TestsSectionFragment();
+            testsFragment.setListener(new TestsFragmentListener() {
                 @Override
-                public void onRunUsbTest(DetailsViewModel model) {
+                public void onRunUsbTest(TestsViewModel model) {
                     if (microUsbService != null) {
                         try {
                             microUsbService.testCommunication(model);
@@ -377,7 +376,8 @@ public class MainActivity extends FragmentActivity {
                 }
             });
             graphFragment = new GraphSectionFragment();
-            fragments = new Fragment[] { homeFragment, detailsFragment, graphFragment };
+            homeFragment = new HomeSectionFragment();
+            fragments = new Fragment[] { testsFragment, homeFragment, graphFragment };
         }
 
         @Override
@@ -396,7 +396,7 @@ public class MainActivity extends FragmentActivity {
         }
 
         public void updateAvailabeMicrocontrollers(List<String> microcontrollers) {
-            detailsFragment.setAvailableMicrocontrollers(microcontrollers);
+            testsFragment.setAvailableMicrocontrollers(microcontrollers);
         }
     }
 }

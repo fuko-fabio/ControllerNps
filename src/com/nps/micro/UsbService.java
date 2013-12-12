@@ -26,12 +26,12 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.nps.micro.model.DetailsViewModel;
+import com.nps.micro.model.TestsViewModel;
 import com.nps.storage.ExternalFile;
 import com.nps.storage.ExternalStorageException;
 import com.nps.storage.TestResults;
 import com.nps.usb.UsbGateException;
-import com.nps.usb.microcontroller.Arhitecture;
+import com.nps.usb.microcontroller.Architecture;
 import com.nps.usb.microcontroller.AsyncSequence;
 import com.nps.usb.microcontroller.Microcontroller;
 import com.nps.usb.microcontroller.MicrocontrollerException;
@@ -207,10 +207,10 @@ public class UsbService extends Service {
         //}
     }
     
-    public void testCommunication(DetailsViewModel model) throws MicrocontrollerException, UsbGateException {
+    public void testCommunication(TestsViewModel model) throws MicrocontrollerException, UsbGateException {
         showTestStartedNotification();
         filterSelectedMicrocontrollers(model);
-        for (Arhitecture arhitecture : model.getArhitectures()) {
+        for (Architecture arhitecture : model.getArchitectures()) {
             switch (arhitecture) {
             case SRSR_STANDARD_PRIORITY:
                 testSyncThread(model, Sequence.SRSR, Priority.NORMAL, arhitecture);
@@ -279,7 +279,7 @@ public class UsbService extends Service {
         thread.start();
     }
 
-    private void filterSelectedMicrocontrollers(DetailsViewModel model) {
+    private void filterSelectedMicrocontrollers(TestsViewModel model) {
         if (model.getDevices() == null) {
             model.setDevices(microcontrollersNames.toArray(new String[microcontrollersNames.size()]));
         }
@@ -295,7 +295,7 @@ public class UsbService extends Service {
 
     }
 
-    private void testSyncThread(final DetailsViewModel model, final Sequence sequence, final Priority priority, final Arhitecture arhitecture) {
+    private void testSyncThread(final TestsViewModel model, final Sequence sequence, final Priority priority, final Architecture arhitecture) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -335,7 +335,7 @@ public class UsbService extends Service {
         futures.add(executorService.submit(thread));
     }
 
-    private void testAsyncThread(final DetailsViewModel model, final Arhitecture arhitecture, final AsyncSequence sequence) {
+    private void testAsyncThread(final TestsViewModel model, final Architecture arhitecture, final AsyncSequence sequence) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {

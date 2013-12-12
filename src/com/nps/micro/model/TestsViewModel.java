@@ -1,27 +1,27 @@
 package com.nps.micro.model;
 
-import com.nps.usb.microcontroller.Arhitecture;
+import com.nps.usb.microcontroller.Architecture;
 
 /**
  * @author Norbert Pabian
  * www.npsoftware.pl
  */
-public class DetailsViewModel {
+public class TestsViewModel {
 
     private int repeats;
     private short streamOutSize;
     private short[] streamInSize;
     private String[] devices;
-    private Arhitecture[] arhitectures;
+    private Architecture[] architectures;
     private boolean saveLogs;
 
-    public DetailsViewModel() {
+    public TestsViewModel() {
         super();
         repeats = 1;
         streamOutSize = 16;
         streamInSize = new short[]{48};
         devices = null;
-        arhitectures = new Arhitecture[]{Arhitecture.SRSR_STANDARD_PRIORITY};
+        architectures = new Architecture[]{Architecture.SRSR_STANDARD_PRIORITY};
         saveLogs = false;
     }
 
@@ -49,11 +49,11 @@ public class DetailsViewModel {
     public void setDevices(String[] devices) {
         this.devices = devices;
     }
-    public Arhitecture[] getArhitectures() {
-        return arhitectures;
+    public Architecture[] getArchitectures() {
+        return architectures;
     }
-    public void setArhitectures(Arhitecture[] arhitectures) {
-        this.arhitectures = arhitectures;
+    public void setArchitectures(Architecture[] arhitectures) {
+        this.architectures = arhitectures;
     }
     public boolean isSaveLogs() {
         return saveLogs;

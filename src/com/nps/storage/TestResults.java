@@ -1,6 +1,6 @@
 package com.nps.storage;
 
-import com.nps.usb.microcontroller.Arhitecture;
+import com.nps.usb.microcontroller.Architecture;
 
 /**
  * @author Norbert Pabian www.npsoftware.pl
@@ -11,12 +11,12 @@ public class TestResults {
     private final short streamInSize;
     private final int repeats;
     private final short numberOfDevices;
-    private final Arhitecture arhitecture;
+    private final Architecture arhitecture;
     private final short[] index;
     private final long[] duration;
     private final short[] hwDuration;
 
-    public TestResults(short streamOutSize, short streamInSize, int repeats, Arhitecture arhitecture, short numberOfDevices) {
+    public TestResults(short streamOutSize, short streamInSize, int repeats, Architecture arhitecture, short numberOfDevices) {
         this.streamOutSize = streamOutSize;
         this.streamInSize = streamInSize;
         this.repeats = repeats;
@@ -39,7 +39,7 @@ public class TestResults {
         return repeats;
     }
 
-    public Arhitecture getArhitecture() {
+    public Architecture getArhitecture() {
         return arhitecture;
     }
 
