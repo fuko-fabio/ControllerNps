@@ -26,18 +26,18 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.nps.architecture.ThreadPriority;
+import com.nps.architecture.Sequence.Group;
 import com.nps.micro.model.TestsViewModel;
 import com.nps.storage.ExternalFile;
 import com.nps.storage.ExternalStorageException;
 import com.nps.storage.TestResults;
+import com.nps.test.Scenario;
+import com.nps.test.ScenariosGenerator;
 import com.nps.usb.UsbGateException;
-import com.nps.usb.microcontroller.Architecture;
-import com.nps.usb.microcontroller.AsyncSequence;
 import com.nps.usb.microcontroller.Microcontroller;
 import com.nps.usb.microcontroller.MicrocontrollerException;
 import com.nps.usb.microcontroller.Packet;
-import com.nps.usb.microcontroller.Priority;
-import com.nps.usb.microcontroller.Sequence;
 
 /**
  * @author Norbert Pabian
@@ -60,7 +60,6 @@ public class UsbService extends Service {
     private List<UsbDevice> devices = new ArrayList<UsbDevice>();
     private List<Microcontroller> availableMicrocontrollers = new ArrayList<Microcontroller>();
     private List<String> microcontrollersNames = new ArrayList<String>();
-    private Microcontroller[] selectedMicrocontrollers;
 
      // Keeps track of all current registered clients.
     static ArrayList<Messenger> mClients = new ArrayList<Messenger>();
@@ -209,40 +208,10 @@ public class UsbService extends Service {
     
     public void testCommunication(TestsViewModel model) throws MicrocontrollerException, UsbGateException {
         showTestStartedNotification();
-        filterSelectedMicrocontrollers(model);
-        for (Architecture arhitecture : model.getArchitectures()) {
-            switch (arhitecture) {
-            case SRSR_STANDARD_PRIORITY:
-                testSyncThread(model, Sequence.SRSR, Priority.NORMAL, arhitecture);
-                break;
-            case SSRR_STANDARD_PRIORITY:
-                testSyncThread(model, Sequence.SSRR, Priority.NORMAL, arhitecture);
-                break;
-            case SRSR_HI_PRIORITY_ANDROID:
-                testSyncThread(model, Sequence.SRSR, Priority.ANDROID_BASED_HIGH, arhitecture);
-                break;
-            case SRSR_HI_PRIORITY_JAVA:
-                testSyncThread(model, Sequence.SRSR, Priority.JAVA_BASED_HIGH, arhitecture);
-                break;
-            case SSRR_HI_PRIORITY_ANDROID:
-                testSyncThread(model, Sequence.SSRR, Priority.ANDROID_BASED_HIGH, arhitecture);
-                break;
-            case SSRR_HI_PRIORITY_JAVA:
-                testSyncThread(model, Sequence.SSRR, Priority.JAVA_BASED_HIGH, arhitecture);
-                break;
-            case SWRWSWRW_EVENT_DRIVEN:
-                testAsyncThread(model, arhitecture, AsyncSequence.SWRWSWRW);
-                break;
-            case SRWWSRWW_EVENT_DRIVEN:
-                testAsyncThread(model, arhitecture, AsyncSequence.SRWWSRWW);
-                break;
-            case SWSWRWRW_EVENT_DRIVEN:
-                testAsyncThread(model, arhitecture, AsyncSequence.SWSWRWRW);
-                break;
-            case SSRRWWWW_EVENT_DRIVEN:
-                testAsyncThread(model, arhitecture, AsyncSequence.SSRRWWWW);
-                break;
-            }
+        ScenariosGenerator scenariosGeneratior = new ScenariosGenerator(model);
+        List<Scenario> scenarios = scenariosGeneratior.generate();
+        for(Scenario scenario : scenarios) {
+            testScenarioThread(scenario);
         }
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -279,12 +248,103 @@ public class UsbService extends Service {
         thread.start();
     }
 
-    private void filterSelectedMicrocontrollers(TestsViewModel model) {
-        if (model.getDevices() == null) {
-            model.setDevices(microcontrollersNames.toArray(new String[microcontrollersNames.size()]));
+    private void testScenarioThread(final Scenario scenario) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Starting test: Sequence " + scenario.getSequence().name() + " priority: " + scenario.getThreadPriority().name());
+                if(scenario.getThreadPriority() == ThreadPriority.ANDROID_BASED_HIGH){
+                    Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+                }
+                final int repeats = scenario.getRepeats();
+                final boolean saveStreamData = scenario.isSaveStreamData();
+                final boolean simulateComputations = scenario.isSimulateComputations();
+                final Microcontroller[] selectedMicrocontrollers = getSelectedMicrocontrollersForScenario(scenario);
+                try {
+                    for (short setreamInSize : scenario.getStreamInSizes()) {
+                        System.gc();
+                        switchMicrocontrollersToStreamMode(selectedMicrocontrollers, scenario.getStreamOutSize(), (short) setreamInSize);
+                        TestResults testResults = new TestResults(scenario.getStreamOutSize(),
+                                                                  setreamInSize,
+                                                                  repeats,
+                                                                  scenario.getSequence(),
+                                                                  scenario.getThreadPriority(),
+                                                                  (short)scenario.getDevices().length);
+
+                        if (scenario.getSequence().isInGroup(Group.SYNC)) {
+                            execSyncScenarioLoop(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                        } else if(scenario.getSequence().isInGroup(Group.ASYNC)) {
+                            execASyncScenarioLoop(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                        }
+
+                        switchMicrocontrollersToCommandMode(selectedMicrocontrollers);
+                        System.gc();
+                        if (scenario.isSaveSpeedLogs()) {
+                            saveTestResults(testResults);
+                        }
+                    }
+                } catch (MicrocontrollerException e) {
+                    Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
+                } catch (IllegalAccessException e) {
+                    Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
+                }
+                Log.d(TAG, "Test done: Java thread sequence " + scenario.getSequence().name() + " priority: " + scenario.getThreadPriority().name());
+            }
+
+            private void execSyncScenarioLoop(Microcontroller[] selectedMicrocontrollers,
+                    int repeats, TestResults testResults, boolean saveStreamData,
+                    boolean simulateComputations) throws MicrocontrollerException {
+                switch (scenario.getSequence()) {
+                case SRSR:
+                    execSyncSeqSRSR(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                    break;
+                case SSRR:
+                    execSyncSeqSSRR(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                    break;
+                default:
+                    Log.e(TAG, "Unknown SYNC test sequence");
+                    break;
+                }
+            }
+
+            private void execASyncScenarioLoop(Microcontroller[] selectedMicrocontrollers,
+                    int repeats, TestResults testResults, boolean saveStreamData,
+                    boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+                switch (scenario.getSequence()) {
+                case SRSR_wwww:
+                    execASyncSeqSRSRwwww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                    break;
+                case SRww_SRww:
+                    execASyncSeqSRwwSRww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                    break;
+                case SSRR_wwww:
+                    execASyncSeqSSRRwwww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                    break;
+                case SSww_RRww:
+                    execASyncSeqSSwwRRww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                    break;
+                case Sw_Rw_Sw_Rw:
+                    execASyncSeqSwRwSwRw(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                    break;
+                case Sw_Sw_Rw_Rw:
+                    execASyncSeqSwSwRwRw(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+                    break;
+                default:
+                    Log.e(TAG, "Unknown ASYNC test sequence");
+                    break;
+                }
+            }
+
+        });
+        if(scenario.getThreadPriority() == ThreadPriority.JAVA_BASED_HIGH){
+            thread.setPriority(Thread.MAX_PRIORITY);
         }
-        List<String> selectedDevices = Arrays.asList(model.getDevices());
-        selectedMicrocontrollers = new Microcontroller[selectedDevices.size()];
+        futures.add(executorService.submit(thread));
+    }
+
+    private Microcontroller[] getSelectedMicrocontrollersForScenario(Scenario scenario) {
+        List<String> selectedDevices = Arrays.asList(scenario.getDevices());
+        Microcontroller[] selectedMicrocontrollers = new Microcontroller[selectedDevices.size()];
         int index = 0;
         for (Microcontroller microcontroller : availableMicrocontrollers) {
             if (selectedDevices.contains(microcontroller.getDeviceName())) {
@@ -292,128 +352,69 @@ public class UsbService extends Service {
                 index++;
             }
         }
-
+        return selectedMicrocontrollers;
     }
 
-    private void testSyncThread(final TestsViewModel model, final Sequence sequence, final Priority priority, final Architecture arhitecture) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "Starting test: Sequence " + sequence.name() + " priority: " + priority.name());
-                if(priority == Priority.ANDROID_BASED_HIGH){
-                    Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+    private void execASyncSeqSwRwSwRw(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
+            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+        for (Microcontroller micro : selectedMicrocontrollers) {
+            micro.initAsyncCommunication();
+        }
+        for (int i = 0; i < repeats; i++) {
+            final long before = System.nanoTime();
+            for (Microcontroller micro : selectedMicrocontrollers) {
+                micro.sendAsyncStreamPacket(null);
+                micro.asyncRequestWait();
+                micro.receiveAsyncStreamPacket();
+                if (simulateComputations) {
+                    calculateFakeData();
                 }
-                final int repeats = model.getRepeats();
-                try {
-                    for (short setreamInSize : model.getStreamInSizes()) {
-                        System.gc();
-                        switchMicrocontrollersToStreamMode((short) model.getStreamOutSize(), (short) setreamInSize);
-                        TestResults testResults = new TestResults(model.getStreamOutSize(), setreamInSize, repeats, arhitecture, (short)model.getDevices().length);
-                        switch (sequence){
-                        case SRSR:
-                            execStandardSeqSendReadSend(repeats, testResults);
-                            break;
-                        case SSRR:
-                            execStandardSeqSendSendRread(repeats, testResults);
-                            break;
-                        }
-                        switchMicrocontrollersToCommandMode();
-                        System.gc();
-                        if (model.isSaveLogs()) {
-                            saveTestResults(testResults);
-                        }
-                    }
-                } catch (MicrocontrollerException e) {
-                    Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
+                micro.asyncRequestWait();
+                if(saveStreamData) {
+                    writeStreamDataToFile(micro.getLastSentStreamPacket(),
+                                          micro.getLastReceivedStreamPacket());
                 }
-                Log.d(TAG, "Test done: Java thread sequence " + sequence.name() + " priority: " + priority.name());
             }
-        });
-        if(priority == Priority.JAVA_BASED_HIGH){
-            thread.setPriority(Thread.MAX_PRIORITY);
+            byte[] packet = selectedMicrocontrollers[0].getLastReceivedStreamPacket();
+
+            testResults.addDuration(i,
+                                    Packet.shortFromBytes(packet[0], packet[1]),
+                                    System.nanoTime() - before,
+                                    Packet.shortFromBytes(packet[4], packet[5]));
         }
-        futures.add(executorService.submit(thread));
     }
 
-    private void testAsyncThread(final TestsViewModel model, final Architecture arhitecture, final AsyncSequence sequence) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "Starting test: Sequence " + sequence.name() + " event driven");
-                final int repeats = model.getRepeats();
-                try {
-                    for (short setreamInSize : model.getStreamInSizes()) {
-                        System.gc();
-                        switchMicrocontrollersToStreamMode((short) model.getStreamOutSize(), (short) setreamInSize);
-                        TestResults testResults = new TestResults(model.getStreamOutSize(), setreamInSize, repeats, arhitecture, (short)model.getDevices().length);
-                        switch (sequence){
-                        case SRSRWWWW:
-                            break;
-                        case SRWWSRWW:
-                            execQueueSendReadWaitSeqSendRreadSend(repeats, testResults);
-                            break;
-                        case SSRRWWWW:
-                            execQueueSendReadWaitSeqSendSendRread(repeats, testResults);
-                            break;
-                        case SSWWRRWW:
-                            break;
-                        case SWRWSWRW:
-                            execQueueSendWaitReadSeqSendRreadSend(repeats, testResults);
-                            break;
-                        case SWSWRWRW:
-                            execQueueSendWaitSeqSendSendRread(repeats, testResults);
-                            break;
-                        }
-                        switchMicrocontrollersToCommandMode();
-                        System.gc();
-                        if (model.isSaveLogs()) {
-                            saveTestResults(testResults);
-                        }
-                    }
-                } catch (MicrocontrollerException e) {
-                    Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
-                } catch (IllegalAccessException e ) {
-                    Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
+    private void execASyncSeqSRwwSRww(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
+            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+        for (Microcontroller micro : selectedMicrocontrollers) {
+            micro.initAsyncCommunication();
+        }
+        for (int i = 0; i < repeats; i++) {
+            final long before = System.nanoTime();
+            for (Microcontroller micro : selectedMicrocontrollers) {
+                micro.sendAsyncStreamPacket(null);
+                micro.receiveAsyncStreamPacket();
+                if (simulateComputations) {
+                    calculateFakeData();
                 }
-                Log.d(TAG, "Test done: Sequence " + sequence.name() +  " event driven");
+                micro.asyncRequestWait();
+                micro.asyncRequestWait();
+                if(saveStreamData) {
+                    writeStreamDataToFile(micro.getLastSentStreamPacket(),
+                                          micro.getLastReceivedStreamPacket());
+                }
             }
-        });
-        futures.add(executorService.submit(thread));
-    }
+            byte[] packet = selectedMicrocontrollers[0].getLastReceivedStreamPacket();
 
-    private void execQueueSendWaitReadSeqSendRreadSend(int repeats, TestResults testResults) throws MicrocontrollerException, IllegalAccessException {
-        for (Microcontroller micro : selectedMicrocontrollers) {
-            micro.initAsyncCommunication();
-        }
-        for (int i = 0; i < repeats; i++) {
-            final long before = System.nanoTime();
-            for (Microcontroller micro : selectedMicrocontrollers) {
-                micro.sendAsyncStreamPacket(null);
-                micro.asyncRequestWait();
-                micro.receiveAsyncStreamPacket();
-                micro.asyncRequestWait();
-            }
-            updateTestResults(i, System.nanoTime() - before, selectedMicrocontrollers[0].getLastReceivedStreamPacket(), testResults);
+            testResults.addDuration(i,
+                                    Packet.shortFromBytes(packet[0], packet[1]),
+                                    System.nanoTime() - before,
+                                    Packet.shortFromBytes(packet[4], packet[5]));
         }
     }
 
-    private void execQueueSendReadWaitSeqSendRreadSend(int repeats, TestResults testResults) throws MicrocontrollerException, IllegalAccessException {
-        for (Microcontroller micro : selectedMicrocontrollers) {
-            micro.initAsyncCommunication();
-        }
-        for (int i = 0; i < repeats; i++) {
-            final long before = System.nanoTime();
-            for (Microcontroller micro : selectedMicrocontrollers) {
-                micro.sendAsyncStreamPacket(null);
-                micro.receiveAsyncStreamPacket();
-                micro.asyncRequestWait();
-                micro.asyncRequestWait();
-            }
-            updateTestResults(i, System.nanoTime() - before, selectedMicrocontrollers[0].getLastReceivedStreamPacket(), testResults);
-        }
-    }
-
-    private void execQueueSendWaitSeqSendSendRread(int repeats, TestResults testResults) throws MicrocontrollerException, IllegalAccessException {
+    private void execASyncSeqSwSwRwRw(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
+            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.initAsyncCommunication();
         }
@@ -425,13 +426,26 @@ public class UsbService extends Service {
             }
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.receiveAsyncStreamPacket();
+                if (simulateComputations) {
+                    calculateFakeData();
+                }
                 micro.asyncRequestWait();
+                if(saveStreamData) {
+                    writeStreamDataToFile(micro.getLastSentStreamPacket(),
+                                          micro.getLastReceivedStreamPacket());
+                }
             }
-            updateTestResults(i, System.nanoTime() - before, selectedMicrocontrollers[0].getLastReceivedStreamPacket(), testResults);
+            byte[] packet = selectedMicrocontrollers[0].getLastReceivedStreamPacket();
+
+            testResults.addDuration(i,
+                                    Packet.shortFromBytes(packet[0], packet[1]),
+                                    System.nanoTime() - before,
+                                    Packet.shortFromBytes(packet[4], packet[5]));
         }
     }
 
-    private void execQueueSendReadWaitSeqSendSendRread(int repeats, TestResults testResults) throws MicrocontrollerException, IllegalAccessException {
+    private void execASyncSeqSSRRwwww(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
+            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.initAsyncCommunication();
         }
@@ -442,43 +456,153 @@ public class UsbService extends Service {
             }
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.receiveAsyncStreamPacket();
+                if (simulateComputations) {
+                    calculateFakeData();
+                }
             }
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.asyncRequestWait();
                 micro.asyncRequestWait();
+                if(saveStreamData) {
+                    writeStreamDataToFile(micro.getLastSentStreamPacket(),
+                                          micro.getLastReceivedStreamPacket());
+                }
             }
-            updateTestResults(i, System.nanoTime() - before, selectedMicrocontrollers[0].getLastReceivedStreamPacket(), testResults);
+            byte[] packet = selectedMicrocontrollers[0].getLastReceivedStreamPacket();
+
+            testResults.addDuration(i,
+                                    Packet.shortFromBytes(packet[0], packet[1]),
+                                    System.nanoTime() - before,
+                                    Packet.shortFromBytes(packet[4], packet[5]));
         }
     }
 
-    private void execStandardSeqSendReadSend(final int repeats, TestResults testResults) throws MicrocontrollerException {
+    private void execASyncSeqSRSRwwww(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
+            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+        for (Microcontroller micro : selectedMicrocontrollers) {
+            micro.initAsyncCommunication();
+        }
+        for (int i = 0; i < repeats; i++) {
+            final long before = System.nanoTime();
+            for (Microcontroller micro : selectedMicrocontrollers) {
+                micro.sendAsyncStreamPacket(null);
+                micro.receiveAsyncStreamPacket();
+                if (simulateComputations) {
+                    calculateFakeData();
+                }
+            }
+            for (Microcontroller micro : selectedMicrocontrollers) {
+                micro.asyncRequestWait();
+                micro.asyncRequestWait();
+                if(saveStreamData) {
+                    writeStreamDataToFile(micro.getLastSentStreamPacket(),
+                                          micro.getLastReceivedStreamPacket());
+                }
+            }
+            byte[] packet = selectedMicrocontrollers[0].getLastReceivedStreamPacket();
+
+            testResults.addDuration(i,
+                                    Packet.shortFromBytes(packet[0], packet[1]),
+                                    System.nanoTime() - before,
+                                    Packet.shortFromBytes(packet[4], packet[5]));
+        }
+    }
+
+    private void execASyncSeqSSwwRRww(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
+            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+        for (Microcontroller micro : selectedMicrocontrollers) {
+            micro.initAsyncCommunication();
+        }
+        for (int i = 0; i < repeats; i++) {
+            final long before = System.nanoTime();
+            for (Microcontroller micro : selectedMicrocontrollers) {
+                micro.sendAsyncStreamPacket(null);
+            }
+            for (Microcontroller micro : selectedMicrocontrollers) {
+                micro.asyncRequestWait();
+            }
+            for (Microcontroller micro : selectedMicrocontrollers) {
+                micro.receiveAsyncStreamPacket();
+                if (simulateComputations) {
+                    calculateFakeData();
+                }
+            }
+            for (Microcontroller micro : selectedMicrocontrollers) {
+                micro.asyncRequestWait();
+                if(saveStreamData) {
+                    writeStreamDataToFile(micro.getLastSentStreamPacket(),
+                                          micro.getLastReceivedStreamPacket());
+                }
+            }
+            byte[] packet = selectedMicrocontrollers[0].getLastReceivedStreamPacket();
+
+            testResults.addDuration(i,
+                                    Packet.shortFromBytes(packet[0], packet[1]),
+                                    System.nanoTime() - before,
+                                    Packet.shortFromBytes(packet[4], packet[5]));
+        }
+    }
+
+    private void execSyncSeqSRSR(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
+            final boolean saveStreamData, final boolean simulateComputations)
+            throws MicrocontrollerException {
         for (int i = 0; i < repeats; i++) {
             final long before = System.nanoTime();
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.sendStreamPacket(null);
                 micro.receiveStreamPacket();
+                if (simulateComputations) {
+                    calculateFakeData();
+                }
+                if(saveStreamData) {
+                    writeStreamDataToFile(micro.getLastSentStreamPacket(),
+                                          micro.getLastReceivedStreamPacket());
+                }
             }
-            updateTestResults(i, System.nanoTime() - before, selectedMicrocontrollers[0].getLastReceivedStreamPacket(), testResults);
+            byte[] packet = selectedMicrocontrollers[0].getLastReceivedStreamPacket();
+
+            testResults.addDuration(i,
+                                    Packet.shortFromBytes(packet[0], packet[1]),
+                                    System.nanoTime() - before,
+                                    Packet.shortFromBytes(packet[4], packet[5]));
         }
     }
 
-    private void execStandardSeqSendSendRread(final int repeats, TestResults testResults) throws MicrocontrollerException {
+    private void execSyncSeqSSRR(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
+            final boolean saveStreamData, final boolean simulateComputations)
+            throws MicrocontrollerException {
         for (int i = 0; i < repeats; i++) {
-            long duration = System.nanoTime();
+            long before = System.nanoTime();
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.sendStreamPacket(null);
             }
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.receiveStreamPacket();
+                if (simulateComputations) {
+                    calculateFakeData();
+                }
+                if(saveStreamData) {
+                    writeStreamDataToFile(micro.getLastSentStreamPacket(),
+                                          micro.getLastReceivedStreamPacket());
+                }
             }
-            updateTestResults(i, System.nanoTime() - duration, selectedMicrocontrollers[0].getLastReceivedStreamPacket(), testResults);
+            byte[] packet = selectedMicrocontrollers[0].getLastReceivedStreamPacket();
+
+            testResults.addDuration(i,
+                                    Packet.shortFromBytes(packet[0], packet[1]),
+                                    System.nanoTime() - before,
+                                    Packet.shortFromBytes(packet[4], packet[5]));
         }
     }
 
-    private void updateTestResults(final int index, final long duration, final byte[] packet, TestResults testResults){
-        testResults.addDuration(index, Packet.shortFromBytes(packet[0], packet[1]),
-                duration,
-                Packet.shortFromBytes(packet[4], packet[5]));
+    private void calculateFakeData() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void writeStreamDataToFile(byte[] lastSentStreamPacket, byte[] lastReceivedStreamPacket) {
+        // TODO Auto-generated method stub
+        
     }
 
     private void saveTestResults(TestResults measuredData) {
@@ -490,14 +614,16 @@ public class UsbService extends Service {
         }
     }
 
-    private void switchMicrocontrollersToStreamMode(short streamOutSize, short streamInSize) throws MicrocontrollerException {
+    private void switchMicrocontrollersToStreamMode(Microcontroller[] selectedMicrocontrollers,
+            short streamOutSize, short streamInSize) throws MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.setStreamParameters(streamOutSize, streamInSize);
             micro.switchToStreamMode();
         }
     }
 
-    private void switchMicrocontrollersToCommandMode() throws MicrocontrollerException {
+    private void switchMicrocontrollersToCommandMode(Microcontroller[] selectedMicrocontrollers)
+            throws MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.switchToCommandMode();
         }

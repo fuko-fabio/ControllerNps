@@ -19,9 +19,9 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.nps.architecture.Sequence;
 import com.nps.micro.R;
 import com.nps.micro.model.TestsViewModel;
-import com.nps.usb.microcontroller.Architecture;
 
 public class TestsSectionFragment extends BaseSectionFragment {
 
@@ -35,15 +35,21 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private Button outSizeButton;
     private EditText inSizeInput;
     private Button inSizeButton;
+    private CheckBox normalPriorityCheckBox;
+    private CheckBox hiPriorityJavaCheckBox;
+    private CheckBox hiPriorityAndroidCheckBox;
     private CheckBox saveLogsCheckBox;
-    private String[] arhitecturesArray;
-    private TextView architectureText;
+    private CheckBox saveStreamCheckBox;
+    private CheckBox simulateCheckBox;
+    private CheckBox extendedDevicesCombination;
+    private String[] sequencesArray;
+    private TextView sequenceText;
     private Button arhitectureButton;
     private TextView deviceText;
     private Button deviceButton;
     private List<String> availableMicrocontrollers  = new ArrayList<String>();
     private List<String> selectedMicrocontrollers = new ArrayList<String>();
-    private List<Architecture> selectedArchitectures = new ArrayList<Architecture>();
+    private List<Sequence> selectedSequences = new ArrayList<Sequence>();
 
     public TestsSectionFragment() {
         this.layout = R.layout.tests;
@@ -166,6 +172,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 AlertDialog alert = builder.create();
                 alert.show();
             }});
+
         saveLogsCheckBox = (CheckBox) rootView.findViewById(R.id.saveLogsCheckBox);
         saveLogsCheckBox.setSelected(model.isSaveLogs());
         saveLogsCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -173,30 +180,78 @@ public class TestsSectionFragment extends BaseSectionFragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 model.setSaveLogs(isChecked);
             }});
+        
+        saveStreamCheckBox = (CheckBox) rootView.findViewById(R.id.saveStreamDataCheckbox);
+        saveStreamCheckBox.setSelected(model.isSaveStreams());
+        saveStreamCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                model.setSaveStreams(isChecked);
+            }});
+        
+        simulateCheckBox = (CheckBox) rootView.findViewById(R.id.simulateComputationsCheckbox);
+        simulateCheckBox.setSelected(model.isSimulateComputations());
+        simulateCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                model.setSimulateComputations(isChecked);
+            }});
+        
+        normalPriorityCheckBox = (CheckBox) rootView.findViewById(R.id.normalPriorityCheckbox);
+        normalPriorityCheckBox.setSelected(model.isNormalThreadPriority());
+        normalPriorityCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                model.setNormalThreadPriority(isChecked);
+            }});
+        
+        hiPriorityAndroidCheckBox = (CheckBox) rootView.findViewById(R.id.hiAndroidPriorityCheckbox);
+        hiPriorityAndroidCheckBox.setSelected(model.isHiAndroidThreadPriority());
+        hiPriorityAndroidCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                model.setHiAndroidThreadPriority(isChecked);
+            }});
+        
+        hiPriorityJavaCheckBox = (CheckBox) rootView.findViewById(R.id.hiJavaPriorityCheckbox);
+        hiPriorityJavaCheckBox.setSelected(model.isHiJavaThreadPriority());
+        hiPriorityJavaCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                model.setHiJavaThreadPriority(isChecked);
+            }});
+        
+        extendedDevicesCombination = (CheckBox) rootView.findViewById(R.id.extendedDevicesCheckBox);
+        extendedDevicesCombination.setSelected(model.isExtendedDevicesCombination());
+        extendedDevicesCombination.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                model.setExtendedDevicesCombination(isChecked);
+            }});
 
-        createArchitectureChooser(rootView);
+        createSequenceChooser(rootView);
         createDeviceChooser(rootView, runButton);
         return rootView;
     }
 
-    private void createArchitectureChooser(View rootView) {
-        arhitecturesArray = getResources().getStringArray(R.array.architecture_array);
-        selectedArchitectures.addAll(Arrays.asList(model.getArchitectures()));
-        architectureText = (TextView) rootView.findViewById(R.id.selectedArchitectureText);
+    private void createSequenceChooser(View rootView) {
+        sequencesArray = getResources().getStringArray(R.array.sequence_array);
+        selectedSequences.addAll(Arrays.asList(model.getSequences()));
+        sequenceText = (TextView) rootView.findViewById(R.id.selectedSequenceText);
         StringBuilder builder = new StringBuilder();
-        for (Architecture item : selectedArchitectures) {
+        for (Sequence item : selectedSequences) {
             builder.append(item.toString()).append('\n');
         }
-        architectureText.setText(builder.toString());
+        sequenceText.setText(builder.toString());
         runButton.setEnabled(true);
-        architectureText.setText(builder.toString());
-        arhitectureButton = (Button) rootView.findViewById(R.id.selectArhitectureButton);
+        sequenceText.setText(builder.toString());
+        arhitectureButton = (Button) rootView.findViewById(R.id.selectSequenceButton);
         arhitectureButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean[] checkedItems = new boolean[arhitecturesArray.length];
-                for(int i = 0; i < arhitecturesArray.length; i++){
-                    if(selectedArchitectures.contains(Architecture.fromName(arhitecturesArray[i]))) {
+                boolean[] checkedItems = new boolean[sequencesArray.length];
+                for(int i = 0; i < sequencesArray.length; i++){
+                    if(selectedSequences.contains(Sequence.fromString(sequencesArray[i]))) {
                         checkedItems[i] = true;
                     } else {
                         checkedItems[i] = false;
@@ -204,33 +259,33 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 }
                 new AlertDialog.Builder(getActivity())
                         .setTitle(R.string.arhitecture)
-                        .setMultiChoiceItems(arhitecturesArray, checkedItems,
+                        .setMultiChoiceItems(sequencesArray, checkedItems,
                                 new DialogInterface.OnMultiChoiceClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                                        Architecture selectedArchitecture = Architecture.fromName(arhitecturesArray[which]);
+                                        Sequence selectedArchitecture = Sequence.fromString(sequencesArray[which]);
                                         if (isChecked) {
-                                            selectedArchitectures.add(selectedArchitecture);
-                                        } else if (selectedArchitectures.contains(selectedArchitecture)) {
-                                            selectedArchitectures.remove(selectedArchitecture);
+                                            selectedSequences.add(selectedArchitecture);
+                                        } else if (selectedSequences.contains(selectedArchitecture)) {
+                                            selectedSequences.remove(selectedArchitecture);
                                         }
                                     }
                                 })
                         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
-                                if (selectedArchitectures.isEmpty()) {
-                                    architectureText.setText(getResources().getString(R.string.none));
+                                if (selectedSequences.isEmpty()) {
+                                    sequenceText.setText(getResources().getString(R.string.none));
                                     runButton.setEnabled(false);
                                 } else {
                                     StringBuilder builder = new StringBuilder();
-                                    for (Architecture item : selectedArchitectures) {
+                                    for (Sequence item : selectedSequences) {
                                         builder.append(item.toString()).append('\n');
                                     }
-                                    architectureText.setText(builder.toString());
+                                    sequenceText.setText(builder.toString());
                                     runButton.setEnabled(true);
                                 }
-                                model.setArchitectures(convertArchitecturesObjects(selectedArchitectures));
+                                model.setSequences(selectedSequences.toArray(new Sequence[selectedSequences.size()]));
                             }
                         }).create().show();
             }
@@ -302,9 +357,5 @@ public class TestsSectionFragment extends BaseSectionFragment {
             runButton.setEnabled(true);
         }
         selectedMicrocontrollers.addAll(this.availableMicrocontrollers);
-    }
-
-    private Architecture[] convertArchitecturesObjects(List<Architecture> architectures){
-        return architectures.toArray(new Architecture[architectures.size()]);
     }
 }

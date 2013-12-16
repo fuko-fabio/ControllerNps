@@ -152,6 +152,15 @@ public class Microcontroller {
     }
 
     /**
+     * Returns last sent buffer to microcontroller
+     * 
+     * @return last sent buffer
+     */
+    public byte[] getLastSentStreamPacket() {
+        return testStreamOutBuffer;
+    }
+
+    /**
      * Returns last received buffer from microcontroller
      * 
      * @return last received buffer

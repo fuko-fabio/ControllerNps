@@ -28,18 +28,19 @@ public class ExternalFile {
         logsCatalog = this.context.getString(R.string.logs_catalog);
     }
 
-    public void save(TestResults measuredData) throws ExternalStorageException {
+    public void save(TestResults data) throws ExternalStorageException {
         if (ExternalStorage.isAvailable() && ExternalStorage.isWritable()) {
-            File dir = new File(ExternalStorage.getSdCardPath() + logsCatalog + File.separator
-                    + getDate() + "_D" + measuredData.getNumberOfDevices() + File.separator
-                    + measuredData.getArhitecture().name());
+            File dir = new File(ExternalStorage.getSdCardPath() + logsCatalog + File.separator +
+                    getDate() + File.separator +
+                    data.getSequence().group().name() + '_' + data.getNumberOfDevices() + 'D' + File.separator +
+                    data.getSequence().name() + '_' + data.getThreadPriority().name() +  File.separator);
             dir.mkdirs();
-            File logsFile = new File(dir + File.separator + logsFilename(measuredData) + EXTENSION);
+            File logsFile = new File(dir + File.separator + logsFilename(data) + EXTENSION);
             try {
                 logsFile.createNewFile();
                 FileOutputStream logsFileOutputStream = new FileOutputStream(logsFile);
                 OutputStreamWriter myOutWriter = new OutputStreamWriter(logsFileOutputStream);
-                myOutWriter.append(measuredData.toMatlabFileFormat());
+                myOutWriter.append(data.toMatlabFileFormat());
                 myOutWriter.close();
                 logsFileOutputStream.close();
             } catch (IOException e) {

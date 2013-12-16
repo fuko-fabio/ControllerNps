@@ -120,10 +120,10 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/architectureLabel"
+        android:id="@+id/sequenceLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/arhitecture" />
+        android:text="@string/sequence" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -131,7 +131,7 @@
         android:layout_weight="0.46" >
 
         <TextView
-            android:id="@+id/selectedArchitectureText"
+            android:id="@+id/selectedSequenceText"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.71"
@@ -140,11 +140,45 @@
             android:maxLines = "5" />
 
         <Button
-            android:id="@+id/selectArhitectureButton"
+            android:id="@+id/selectSequenceButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.10"
             android:text="@string/select" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <CheckBox
+            android:id="@+id/normalPriorityCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.40"
+            android:text="@string/normal_priority" />
+
+        <CheckBox
+            android:id="@+id/hiJavaPriorityCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.40"
+            android:text="@string/hi_java_priority" />
+
+        <CheckBox
+            android:id="@+id/hiAndroidPriorityCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.40"
+            android:text="@string/hi_android_priority" />
+
+        <CheckBox
+            android:id="@+id/extendedDevicesCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.40"
+            android:text="@string/extended_devices" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -158,6 +192,20 @@
             android:layout_height="wrap_content"
             android:layout_weight="1.40"
             android:text="@string/save_logs" />
+
+        <CheckBox
+            android:id="@+id/saveStreamDataCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.40"
+            android:text="@string/save_stream_data" />
+
+        <CheckBox
+            android:id="@+id/simulateComputationsCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.40"
+            android:text="@string/simulate" />
 
         <Button
             android:id="@+id/runButton"

@@ -50,7 +50,7 @@
     <string name="out_size">Out packet size</string>
     <string name="in_size">In packet size</string>
     <string name="arhitecture">Arhitecture</string>
-    <string name="save_logs">Save speed logs</string>
+    <string name="save_logs">Save speed logs to file</string>
     <string name="run">Run</string>
     <string name="select">Select</string>
     <string name="device">Device</string>
@@ -58,4 +58,12 @@
     <string name="cancel">Cancel</string>
     <string name="all">All</string>
     <string name="none">None</string>
+    <string name="sequence">Sequence</string>
+    <string name="normal_priority">Normal Priority</string>
+    <string name="hi_java_priority">Hi Priority Java Based</string>
+    <string name="hi_android_priority">Hi Priority Android Based</string>
+    <string name="save_stream_data">Save stream data to file</string>
+    <string name="simulate">Simulate Computations</string>
+    <string name="extended_devices">Extended Devices Combination</string>
+
 </resources>
