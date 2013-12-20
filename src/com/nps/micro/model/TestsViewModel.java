@@ -19,6 +19,7 @@ public class TestsViewModel {
     private boolean hiAndroidThreadPriority;
     private boolean simulateComputations;
     private boolean extendedDevicesCombination;
+    private boolean fastHub;
 
     public TestsViewModel() {
         super();
@@ -27,12 +28,13 @@ public class TestsViewModel {
         streamInSize = new short[] { 48 };
         devices = null;
         sequences = new Sequence[] {Sequence.SRSR};
-        normalThreadPriority = true;
+        normalThreadPriority = false;
         hiJavaThreadPriority = false;
         hiAndroidThreadPriority = false;
         saveLogs = false;
         saveStreams = false;
         extendedDevicesCombination = false;
+        setFastHub(false);
     }
 
     public int getRepeats() {
@@ -129,5 +131,13 @@ public class TestsViewModel {
 
     public void setExtendedDevicesCombination(boolean extendedDevicesCombination) {
         this.extendedDevicesCombination = extendedDevicesCombination;
+    }
+
+    public boolean isFastHub() {
+        return fastHub;
+    }
+
+    public void setFastHub(boolean fastHub) {
+        this.fastHub = fastHub;
     }
 }

@@ -3,6 +3,7 @@ package com.nps.test;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.nps.architecture.Hub;
 import com.nps.architecture.Sequence;
 import com.nps.architecture.ThreadPriority;
 import com.nps.micro.model.TestsViewModel;
@@ -62,6 +63,7 @@ public class ScenariosGenerator {
                 .withStreamOutSize(model.getStreamOutSize())
                 .withThreadPriority(priority)
                 .withDevices(devices)
+                .withHub(model.isFastHub() ? Hub.FAST : Hub.NORMAL)
                 .isSaveSpeedLogs(model.isSaveLogs())
                 .isSaveStreamData(model.isSaveStreams())
                 .isSimulateComputations(model.isSimulateComputations()).build();

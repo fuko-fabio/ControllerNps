@@ -18,6 +18,7 @@ import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
@@ -29,17 +30,16 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
-import android.widget.Toast;
 
+import com.nps.architecture.Sequence;
+import com.nps.architecture.ThreadPriority;
 import com.nps.micro.model.TestsViewModel;
-import com.nps.micro.view.TestsFragmentListener;
-import com.nps.micro.view.TestsSectionFragment;
 import com.nps.micro.view.Dialogs;
 import com.nps.micro.view.GraphSectionFragment;
 import com.nps.micro.view.HomeSectionFragment;
+import com.nps.micro.view.TestsFragmentListener;
+import com.nps.micro.view.TestsSectionFragment;
 import com.nps.usb.DeviceIds;
-import com.nps.usb.UsbGateException;
-import com.nps.usb.microcontroller.MicrocontrollerException;
 
 /**
  * @author Norbert Pabian
@@ -47,7 +47,8 @@ import com.nps.usb.microcontroller.MicrocontrollerException;
  */
 public class MainActivity extends FragmentActivity {
 
-    private static final String ACTION_USB_PERMISSION = "com.nps.micro.USB_PERMISSION";
+    public static final String PACKAGE = "com.nps.micro";
+    private static final String ACTION_USB_PERMISSION = PACKAGE + ".USB_PERMISSION";
     private static final String TAG = "MainActivity";
 
     private UsbService microUsbService;
@@ -61,6 +62,9 @@ public class MainActivity extends FragmentActivity {
 
     List<UsbDevice> devices = new ArrayList<UsbDevice>();
     List<UsbDevice> devicesWithoutPermisions = new ArrayList<UsbDevice>();
+    List<UsbDevice> devicesWithPermisions = new ArrayList<UsbDevice>();
+
+    private final Messenger messenger = new Messenger(new IncomingHandler());
 
     private BroadcastReceiver usbDisconnectedBroadcastReceiver;
 
@@ -96,6 +100,7 @@ public class MainActivity extends FragmentActivity {
 
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         devicesWithoutPermisions.remove(0);
+                        devicesWithPermisions.add(device);
                         requestPermisionForDevice();
                     } else {
                         Log.d(TAG, "permission denied for device " + device);
@@ -119,7 +124,7 @@ public class MainActivity extends FragmentActivity {
             messengerService = new Messenger(((UsbService.LocalBinder) service).getMessenger());
             try {
                 Message msg = Message.obtain(null, UsbService.MSG_REGISTER_CLIENT);
-                msg.replyTo = messengerService;
+                msg.replyTo = messenger;
                 messengerService.send(msg);
             } catch (RemoteException e) {
                 // In this case the service has crashed before we could even do
@@ -138,6 +143,25 @@ public class MainActivity extends FragmentActivity {
         }
     };
 
+    private static class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+            case UsbService.MSG_STATUS:
+                mSectionsPagerAdapter.updateStatus(msg.getData().getBoolean("isBusy"));
+                break;
+            case UsbService.MSG_TEST_STATUS:
+                Bundle b = msg.getData();
+                mSectionsPagerAdapter.updateStatus((Sequence) b.getSerializable("sequence"),
+                                                   (ThreadPriority) b.getSerializable("threadPriority"),
+                                                   b.getShort("streamInSize"));
+                break;
+            default:
+                super.handleMessage(msg);
+            }
+        }
+    }
+
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -146,7 +170,7 @@ public class MainActivity extends FragmentActivity {
      * intensive, it may be best to switch to a
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
-    SectionsPagerAdapter mSectionsPagerAdapter;
+    private static SectionsPagerAdapter mSectionsPagerAdapter;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -182,9 +206,9 @@ public class MainActivity extends FragmentActivity {
         isDeviceAvailable = true;
         Log.d(TAG, "Setup USB service.");
         usbServiceIntent = new Intent(this, UsbService.class);
-        usbServiceIntent.putExtra("numberOfDevices", devices.size());
-        for (int i = 0; i < devices.size(); i++) {
-            usbServiceIntent.putExtra("device" + i, devices.get(i));
+        usbServiceIntent.putExtra(PACKAGE + '.' + "numberOfDevices", devices.size());
+        for (int i = 0; i < devicesWithPermisions.size(); i++) {
+            usbServiceIntent.putExtra(PACKAGE + '.' + "device" + i, devicesWithPermisions.get(i).getDeviceName());
         }
         Log.d(TAG, "Starting nps usb service...");
         startService(usbServiceIntent);
@@ -231,6 +255,7 @@ public class MainActivity extends FragmentActivity {
         }
         UsbDevice dev = devicesWithoutPermisions.get(0);
         if (usbManager.hasPermission(dev)) {
+            devicesWithPermisions.add(devicesWithoutPermisions.get(0));
             devicesWithoutPermisions.remove(0);
             requestPermisionForDevice();
         } else {
@@ -325,13 +350,6 @@ public class MainActivity extends FragmentActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-
-        // Checks the orientation of the screen
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
-        }
     }
 
     @Override
@@ -363,21 +381,25 @@ public class MainActivity extends FragmentActivity {
                 @Override
                 public void onRunUsbTest(TestsViewModel model) {
                     if (microUsbService != null) {
-                        try {
-                            microUsbService.testCommunication(model);
-                        } catch (MicrocontrollerException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (UsbGateException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
+                        microUsbService.testCommunication(model);
                     }
                 }
             });
             graphFragment = new GraphSectionFragment();
             homeFragment = new HomeSectionFragment();
             fragments = new Fragment[] { testsFragment, homeFragment, graphFragment };
+        }
+
+        public void updateStatus(Sequence sequence, ThreadPriority priority, short streamInSize) {
+            testsFragment.setStatus("Testing " + sequence.toString() + ' ' + priority.toString() + " stream in size " + streamInSize);
+        }
+
+        public void updateStatus(boolean isBusy) {
+            if (isBusy) {
+                testsFragment.setStatus("Busy");
+            } else {
+                testsFragment.setStatus("Active");
+            }
         }
 
         @Override

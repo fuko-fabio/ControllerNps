@@ -26,7 +26,7 @@
     <string name="local_service_running">Service is avaiting for commands</string>
     <string name="local_service_test_started">Microcontrollers test started</string>
     <string name="local_service_test_done">Microcontrollers test done</string>
-    <string name="local_service_testing">Testing microcontrollers</string>
+    <string name="local_service_testing">Testing</string>
     <string name="digital_io">Digital Inputs Outputs</string>
     <string name="digital_on1">On 1</string>
     <string name="digital_off1">Off 1</string>
@@ -65,5 +65,6 @@
     <string name="save_stream_data">Save stream data to file</string>
     <string name="simulate">Simulate Computations</string>
     <string name="extended_devices">Extended Devices Combination</string>
-
+    <string name="fast_hub">Fast Usb hub</string>
+    <string name="status">Status: </string>
 </resources>

@@ -171,12 +171,20 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1.40"
                 android:text="@string/hi_android_priority" />
-        <CheckBox
-            android:id="@+id/extendedDevicesCheckBox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.40"
-            android:text="@string/extended_devices" />
+
+	        <CheckBox
+	            android:id="@+id/extendedDevicesCheckBox"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1.40"
+	            android:text="@string/extended_devices" />
+
+            <CheckBox
+                android:id="@+id/fastHubCheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.40"
+                android:text="@string/fast_hub" />
         </LinearLayout>
 
         <LinearLayout

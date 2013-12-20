@@ -1,5 +1,6 @@
 package com.nps.test;
 
+import com.nps.architecture.Hub;
 import com.nps.architecture.Sequence;
 import com.nps.architecture.ThreadPriority;
 
@@ -11,6 +12,7 @@ public class Scenario {
     private String[] devices;
     private ThreadPriority threadPriority;
     private Sequence sequence;
+    private Hub hub;
     private boolean saveSpeedLogs;
     private boolean saveStreamData;
     private boolean simulateComputations;
@@ -85,5 +87,13 @@ public class Scenario {
 
     public void setSimulateComputations(boolean simulateComputations) {
         this.simulateComputations = simulateComputations;
+    }
+
+    public Hub getHub() {
+        return hub;
+    }
+
+    public void setHub(Hub hub) {
+        this.hub = hub;
     }
 }

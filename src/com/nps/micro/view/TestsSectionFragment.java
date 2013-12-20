@@ -28,6 +28,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private TestsFragmentListener listener;
     private final TestsViewModel model = new TestsViewModel();
 
+    private TextView status;
     private Button runButton;
     private EditText repeatsInput;
     private Button repeatsButton;
@@ -42,6 +43,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private CheckBox saveStreamCheckBox;
     private CheckBox simulateCheckBox;
     private CheckBox extendedDevicesCombination;
+    private CheckBox fastHub;
     private String[] sequencesArray;
     private TextView sequenceText;
     private Button arhitectureButton;
@@ -63,6 +65,8 @@ public class TestsSectionFragment extends BaseSectionFragment {
     protected View buildRootView(LayoutInflater inflater, ViewGroup container) {
         View rootView = inflater.inflate(layout, container, false);
 
+        status = (TextView) rootView.findViewById(R.id.statusText);
+        
         runButton = (Button) rootView.findViewById(R.id.runButton);
         runButton.setOnClickListener(new OnClickListener(){
             @Override
@@ -229,6 +233,14 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 model.setExtendedDevicesCombination(isChecked);
             }});
 
+        fastHub = (CheckBox) rootView.findViewById(R.id.fastHubCheckBox);
+        fastHub.setSelected(model.isFastHub());
+        fastHub.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                model.setFastHub(isChecked);
+            }});
+
         createSequenceChooser(rootView);
         createDeviceChooser(rootView, runButton);
         return rootView;
@@ -357,5 +369,11 @@ public class TestsSectionFragment extends BaseSectionFragment {
             runButton.setEnabled(true);
         }
         selectedMicrocontrollers.addAll(this.availableMicrocontrollers);
+    }
+
+    public void setStatus(String string) {
+        if (status != null) {
+            status.setText(string);
+        }
     }
 }

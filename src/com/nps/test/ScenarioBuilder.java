@@ -1,5 +1,6 @@
 package com.nps.test;
 
+import com.nps.architecture.Hub;
 import com.nps.architecture.Sequence;
 import com.nps.architecture.ThreadPriority;
 
@@ -11,6 +12,7 @@ public class ScenarioBuilder {
     private String[] devices;
     private ThreadPriority threadPriority;
     private Sequence sequence;
+    private Hub hub;
     private boolean saveSpeedLogs;
     private boolean saveStreamData;
     private boolean simulateComputations;
@@ -60,6 +62,11 @@ public class ScenarioBuilder {
         return this;
     }
 
+    public ScenarioBuilder withHub(Hub hub) {
+        this.hub = hub;
+        return this;
+    }
+
     public Scenario build() {
         Scenario scenario = new Scenario();
         scenario.setDevices(devices);
@@ -71,6 +78,7 @@ public class ScenarioBuilder {
         scenario.setStreamInSizes(streamInSize);
         scenario.setStreamOutSize(streamOutSize);
         scenario.setThreadPriority(threadPriority);
+        scenario.setHub(hub);
         return scenario;
     }
 }

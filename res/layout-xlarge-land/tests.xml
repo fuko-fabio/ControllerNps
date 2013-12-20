@@ -10,6 +10,26 @@
     android:paddingTop="10dp"
     tools:context=".MainActivity$DummySectionFragment" >
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp" >
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/status"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/repeatsLabel"
         android:layout_width="match_parent"
@@ -178,6 +198,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1.40"
             android:text="@string/extended_devices" />
+
+        <CheckBox
+            android:id="@+id/fastHubCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.40"
+            android:text="@string/fast_hub" />
 
     </LinearLayout>
 
