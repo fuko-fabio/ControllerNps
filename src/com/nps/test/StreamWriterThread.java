@@ -1,6 +1,5 @@
 package com.nps.test;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -10,6 +9,7 @@ import java.util.concurrent.BlockingQueue;
 import android.util.Log;
 
 import com.nps.storage.ExternalStorage;
+import com.nps.storage.Storage.Type;
 
 public class StreamWriterThread extends Thread {
 
@@ -32,18 +32,17 @@ public class StreamWriterThread extends Thread {
         Log.d(TAG, "Starting writing stream to file");
         FileOutputStream fos = null;
         try {
-            File file = new File(externalStorage.getRootFlatDir() + File.separator + STREAM_FILENAME);
-            fos = new FileOutputStream(file);
+            File file = new File(externalStorage.binFilePath());
+            fos = new FileOutputStream(file, true);
         } catch (FileNotFoundException e) {
             Log.e(TAG, "Couldn't create file cause: " + e.getMessage());
             return;
         }
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
         while (isRunning) {
             try {
                 byte[] streamData = streamQueue.take();
                 Log.d(TAG, "Writing " + streamData.length + "bytes to file...");
-                bos.write(streamData);
+                fos.write(streamData);
             } catch (InterruptedException e) {
                 Log.e(TAG, "Couldn't get data to write from queue cause: " + e.getMessage());
             } catch (IOException e) {
@@ -52,7 +51,6 @@ public class StreamWriterThread extends Thread {
             }
         }
         try {
-            bos.close();
             fos.close();
         } catch (IOException e) {
             Log.e(TAG, "Couldn't close file cause: " + e.getMessage());

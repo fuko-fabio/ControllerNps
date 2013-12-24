@@ -159,22 +159,21 @@ public class UsbService extends Service {
     /**
      * Show a notification service is testing microcontrollers.
      */
-    public void showTestRunningNotification(int max, int current, Sequence sequence,
-            ThreadPriority threadPriority, short streamInSize) {
+    public void showTestRunningNotification(Scenario scenario) {
         String contentText = getText(R.string.local_service_testing).toString() +
-                             ' ' + sequence.toString() +
-                             ' ' + threadPriority.toString();
+                             ' ' + scenario.getSequence().toString() +
+                             ' ' + scenario.getThreadPriority().toString() +
+                             " In size: " + scenario.getStreamInSize();
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                                             .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
                                             .setSmallIcon(R.drawable.ic_launcher)
                                             .setContentText(contentText)
-                                            .setContentTitle(getText(R.string.local_service_notification))
-                                            .setProgress(max, current, false).build();
+                                            .setContentTitle(getText(R.string.local_service_notification)).build();
 
         notificationManager.notify(NOTIFICATION, notification);
-        //sendTestingStatusMessage(sequence, threadPriority, streamInSize);
+        sendTestingStatusMessage(scenario.getSequence(), scenario.getThreadPriority(), scenario.getStreamInSize());
     }
 
     /**
@@ -189,7 +188,7 @@ public class UsbService extends Service {
                                             .setContentText(getText(R.string.local_service_test_done))
                                             .setContentTitle(getText(R.string.local_service_notification)).build();
         notificationManager.notify(NOTIFICATION, notification);
-        //sendStatusMessage(false);
+        sendStatusMessage(false);
     }
 
     private void initMicrocontrollers() {

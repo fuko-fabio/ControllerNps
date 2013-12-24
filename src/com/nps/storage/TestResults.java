@@ -1,46 +1,22 @@
 package com.nps.storage;
 
-import com.nps.architecture.Sequence;
-import com.nps.architecture.ThreadPriority;
+import com.nps.test.Scenario;
 
 /**
  * @author Norbert Pabian www.npsoftware.pl
  */
 public class TestResults {
 
-    private final short streamOutSize;
-    private final short streamInSize;
-    private final int repeats;
-    private final short numberOfDevices;
-    private final Sequence sequence;
-    private final ThreadPriority threadPriority;
+    private final Scenario scenario;
     private final short[] index;
     private final long[] duration;
     private final short[] hwDuration;
 
-    public TestResults(short streamOutSize, short streamInSize, int repeats, Sequence sequence,
-            ThreadPriority threadPriority, short numberOfDevices) {
-        this.streamOutSize = streamOutSize;
-        this.streamInSize = streamInSize;
-        this.repeats = repeats;
-        this.index = new short[repeats];
-        this.duration = new long[repeats];
-        this.hwDuration = new short[repeats];
-        this.sequence = sequence;
-        this.threadPriority = threadPriority;
-        this.numberOfDevices = numberOfDevices;
-    }
-
-    public int getStreamOutSize() {
-        return streamOutSize;
-    }
-
-    public int getStreamInSize() {
-        return streamInSize;
-    }
-
-    public int getRepeats() {
-        return repeats;
+    public TestResults(Scenario scenario) {
+        this.scenario = scenario;
+        this.index = new short[scenario.getRepeats()];
+        this.duration = new long[scenario.getRepeats()];
+        this.hwDuration = new short[scenario.getRepeats()];
     }
 
     public void addDuration(final int currentIndex, final short hardwareIndex, final long duration, final short hardwareDuration) {
@@ -51,12 +27,12 @@ public class TestResults {
 
     public String toMatlabFileFormat() {
         StringBuilder builder = new StringBuilder();
-        builder.append("dane.rozmiarWysylanegoPakietu = " + streamOutSize + ";\n")
-               .append("dane.rozmiarOdbieranegoPakietu = " + streamInSize + ";\n")
+        builder.append("dane.rozmiarWysylanegoPakietu = " + scenario.getStreamOutSize() + ";\n")
+               .append("dane.rozmiarOdbieranegoPakietu = " + scenario.getStreamInSize() + ";\n")
                .append("dane.wartosci = [\n");
         double durationSum = 0;
         double time;
-        for(int i = 0; i<repeats;i++){
+        for (int i = 0; i < scenario.getRepeats(); i++) {
             time = (double)duration[i]/1000000;
             durationSum += time;
             builder.append(index[i] + ", " +
@@ -65,25 +41,13 @@ public class TestResults {
                            0 + ";\n");
         }
         builder.append("];\n")
-               .append("dane.ileRazy = " + repeats + ";\n")
+               .append("dane.ileRazy = " + scenario.getRepeats() + ";\n")
                .append("dane.sumDT = " + durationSum + ";\n")
-               .append("dane.sredniaDT = " + durationSum/repeats + ";\n")
-               .append("dane.nazwa = '" + streamOutSize + "B/" + streamInSize + "B/x" + repeats + "';\n")
-               .append("dane.sekwencja = " + sequence.name() + ";\n")
-               .append("dane.priorytetWatku = " + threadPriority.name() + ";\n")
-               .append("dane.iloscKart = " + numberOfDevices + ";\n");
+               .append("dane.sredniaDT = " + durationSum/scenario.getRepeats() + ";\n")
+               .append("dane.nazwa = '" + scenario.getStreamOutSize() + "B/" + scenario.getStreamInSize() + "B/x" + scenario.getRepeats() + "';\n")
+               .append("dane.sekwencja = '" + scenario.getSequence().name() + "';\n")
+               .append("dane.priorytetWatku = '" + scenario.getThreadPriority().name() + "';\n")
+               .append("dane.iloscKart = " + scenario.getDevices().length + ";\n");
         return builder.toString();
-    }
-
-    public short getNumberOfDevices() {
-        return numberOfDevices;
-    }
-
-    public ThreadPriority getThreadPriority() {
-        return threadPriority;
-    }
-
-    public Sequence getSequence() {
-        return sequence;
     }
 }

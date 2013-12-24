@@ -41,7 +41,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private CheckBox hiPriorityAndroidCheckBox;
     private CheckBox saveLogsCheckBox;
     private CheckBox saveStreamCheckBox;
-    private CheckBox simulateCheckBox;
+    private EditText simulateEditText;
     private CheckBox extendedDevicesCombination;
     private CheckBox fastHub;
     private String[] sequencesArray;
@@ -193,14 +193,21 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 model.setSaveStreams(isChecked);
             }});
         
-        simulateCheckBox = (CheckBox) rootView.findViewById(R.id.simulateComputationsCheckbox);
-        simulateCheckBox.setSelected(model.isSimulateComputations());
-        simulateCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+        simulateEditText = (EditText) rootView.findViewById(R.id.simulateComputationsEditText);
+        simulateEditText.setText(String.valueOf(model.getSimulateComputations()));
+        simulateEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                model.setSimulateComputations(isChecked);
-            }});
-        
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                model.setSimulateComputations(Short.valueOf(s.toString()));
+            }
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
         normalPriorityCheckBox = (CheckBox) rootView.findViewById(R.id.normalPriorityCheckbox);
         normalPriorityCheckBox.setSelected(model.isNormalThreadPriority());
         normalPriorityCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {

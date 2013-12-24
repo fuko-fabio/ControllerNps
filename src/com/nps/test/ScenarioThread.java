@@ -51,7 +51,7 @@ public class ScenarioThread extends Thread {
             streamQueue = new ArrayBlockingQueue<byte[]>(STREAM_QUEUE_SIZE);
             streamBuffer = ByteBuffer.allocateDirect(STREAM_BUFFER_SIZE);
         }
-        if(scenario.isSimulateComputations()) {
+        if(scenario.getSimulateComputations() > 0) {
             for (int i = 0; i < FAKE_ARRAY_SIZE; i++) {
                 fakeDataArray0[i] = Math.random();
                 fakeDataArray1[i] = Math.random();
@@ -67,44 +67,51 @@ public class ScenarioThread extends Thread {
         }
         final int repeats = scenario.getRepeats();
         final boolean saveStreamData = scenario.isSaveStreamData();
-        final boolean simulateComputations = scenario.isSimulateComputations();
+        final boolean simulateComputations = scenario.getSimulateComputations() > 0;
+        final short computationsMultiplier = scenario.getSimulateComputations();
+        final TestResults testResults = new TestResults(scenario);
         if(saveStreamData) {
             streamWriterThread = new StreamWriterThread(streamQueue, externalStorage);
             streamWriterThread.start();
         }
-        final short[] streamInSizes = scenario.getStreamInSizes();
-        final int streamInSizesLenght = streamInSizes.length;
+        service.showTestRunningNotification(scenario);
+        System.gc();
         try {
-            for (int i = 0; i < streamInSizes.length; i++) {
-                service.showTestRunningNotification(streamInSizesLenght, i, scenario.getSequence(), scenario.getThreadPriority(), streamInSizes[i]);
-                System.gc();
-                switchMicrocontrollersToStreamMode(microcontrollers, scenario.getStreamOutSize(), (short) streamInSizes[i]);
-                TestResults testResults = new TestResults(scenario.getStreamOutSize(),
-                                                          streamInSizes[i],
-                                                          repeats,
-                                                          scenario.getSequence(),
-                                                          scenario.getThreadPriority(),
-                                                          (short)scenario.getDevices().length);
-
-                if (scenario.getSequence().isInGroup(Group.SYNC)) {
-                    execSyncScenarioLoop(microcontrollers, repeats, testResults, saveStreamData, simulateComputations);
-                } else if(scenario.getSequence().isInGroup(Group.ASYNC)) {
-                    execASyncScenarioLoop(microcontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            switchMicrocontrollersToStreamMode(microcontrollers, scenario.getStreamOutSize(), (short) scenario.getStreamInSize());
+        } catch (MicrocontrollerException e) {
+            Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
+        }
+        try {
+            if (scenario.getSequence().isInGroup(Group.SYNC)) {
+                execSyncScenarioLoop(microcontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
+            } else if(scenario.getSequence().isInGroup(Group.ASYNC)) {
+                execASyncScenarioLoop(microcontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
+            }
+            if (scenario.isSaveSpeedLogs()) {
+                saveTestResults(testResults);
+            }
+            if(saveStreamData) {
+                try {
+                    int size = streamBuffer.position();
+                    byte[] tmp = new byte[size];
+                    streamBuffer.rewind();
+                    streamBuffer.get(tmp, 0, size);
+                    streamBuffer.clear();
+                    streamQueue.put(tmp);
+                } catch (InterruptedException e) {
+                    Log.d(TAG, "Couldn't send data to write cause: " + e.getMessage());
                 }
-
-                switchMicrocontrollersToCommandMode(microcontrollers);
-                System.gc();
-                if (scenario.isSaveSpeedLogs()) {
-                    saveTestResults(testResults);
-                }
+                streamWriterThread.finalize();
             }
         } catch (MicrocontrollerException e) {
             Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
         } catch (IllegalAccessException e) {
             Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
         }
-        if(saveStreamData) {
-            streamWriterThread.finalize();
+        try {
+            switchMicrocontrollersToCommandMode(microcontrollers);
+        } catch (MicrocontrollerException e) {
+            Log.e(TAG, "Couldn't execute test cause: " + e.getMessage());
         }
         Log.d(TAG, "Test done: Java thread sequence " + scenario.getSequence().name() + " priority: " + scenario.getThreadPriority().name());
     }
@@ -126,13 +133,13 @@ public class ScenarioThread extends Thread {
 
     private void execSyncScenarioLoop(Microcontroller[] selectedMicrocontrollers,
             int repeats, TestResults testResults, boolean saveStreamData,
-            boolean simulateComputations) throws MicrocontrollerException {
+            boolean simulateComputations,  short computationsMultiplier) throws MicrocontrollerException {
         switch (scenario.getSequence()) {
         case SRSR:
-            execSyncSeqSRSR(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            execSyncSeqSRSR(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
             break;
         case SSRR:
-            execSyncSeqSSRR(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            execSyncSeqSSRR(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
             break;
         default:
             Log.e(TAG, "Unknown SYNC test sequence");
@@ -142,25 +149,25 @@ public class ScenarioThread extends Thread {
 
     private void execASyncScenarioLoop(Microcontroller[] selectedMicrocontrollers,
             int repeats, TestResults testResults, boolean saveStreamData,
-            boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+            boolean simulateComputations,  short computationsMultiplier) throws IllegalAccessException, MicrocontrollerException {
         switch (scenario.getSequence()) {
         case SRSR_wwww:
-            execASyncSeqSRSRwwww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            execASyncSeqSRSRwwww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
             break;
         case SRww_SRww:
-            execASyncSeqSRwwSRww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            execASyncSeqSRwwSRww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
             break;
         case SSRR_wwww:
-            execASyncSeqSSRRwwww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            execASyncSeqSSRRwwww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
             break;
         case SSww_RRww:
-            execASyncSeqSSwwRRww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            execASyncSeqSSwwRRww(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
             break;
         case Sw_Rw_Sw_Rw:
-            execASyncSeqSwRwSwRw(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            execASyncSeqSwRwSwRw(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
             break;
         case Sw_Sw_Rw_Rw:
-            execASyncSeqSwSwRwRw(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations);
+            execASyncSeqSwSwRwRw(selectedMicrocontrollers, repeats, testResults, saveStreamData, simulateComputations, computationsMultiplier);
             break;
         default:
             Log.e(TAG, "Unknown ASYNC test sequence");
@@ -169,7 +176,7 @@ public class ScenarioThread extends Thread {
     }
 
     private void execASyncSeqSwRwSwRw(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
-            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+            final boolean saveStreamData, final boolean simulateComputations, short computationsMultiplier) throws IllegalAccessException, MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.initAsyncCommunication();
         }
@@ -180,7 +187,7 @@ public class ScenarioThread extends Thread {
                 micro.asyncRequestWait();
                 micro.receiveAsyncStreamPacket();
                 if (simulateComputations) {
-                    calculateFakeData();
+                    calculateFakeData(computationsMultiplier);
                 }
                 micro.asyncRequestWait();
                 if(saveStreamData) {
@@ -198,7 +205,7 @@ public class ScenarioThread extends Thread {
     }
 
     private void execASyncSeqSRwwSRww(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
-            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+            final boolean saveStreamData, final boolean simulateComputations,  short computationsMultiplier) throws IllegalAccessException, MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.initAsyncCommunication();
         }
@@ -208,7 +215,7 @@ public class ScenarioThread extends Thread {
                 micro.sendAsyncStreamPacket(null);
                 micro.receiveAsyncStreamPacket();
                 if (simulateComputations) {
-                    calculateFakeData();
+                    calculateFakeData(computationsMultiplier);
                 }
                 micro.asyncRequestWait();
                 micro.asyncRequestWait();
@@ -227,7 +234,7 @@ public class ScenarioThread extends Thread {
     }
 
     private void execASyncSeqSwSwRwRw(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
-            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+            final boolean saveStreamData, final boolean simulateComputations, short computationsMultiplier) throws IllegalAccessException, MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.initAsyncCommunication();
         }
@@ -240,7 +247,7 @@ public class ScenarioThread extends Thread {
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.receiveAsyncStreamPacket();
                 if (simulateComputations) {
-                    calculateFakeData();
+                    calculateFakeData(computationsMultiplier);
                 }
                 micro.asyncRequestWait();
                 if(saveStreamData) {
@@ -258,7 +265,7 @@ public class ScenarioThread extends Thread {
     }
 
     private void execASyncSeqSSRRwwww(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
-            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+            final boolean saveStreamData, final boolean simulateComputations,  short computationsMultiplier) throws IllegalAccessException, MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.initAsyncCommunication();
         }
@@ -270,7 +277,7 @@ public class ScenarioThread extends Thread {
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.receiveAsyncStreamPacket();
                 if (simulateComputations) {
-                    calculateFakeData();
+                    calculateFakeData(computationsMultiplier);
                 }
             }
             for (Microcontroller micro : selectedMicrocontrollers) {
@@ -291,7 +298,7 @@ public class ScenarioThread extends Thread {
     }
 
     private void execASyncSeqSRSRwwww(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
-            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+            final boolean saveStreamData, final boolean simulateComputations,  short computationsMultiplier) throws IllegalAccessException, MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.initAsyncCommunication();
         }
@@ -301,7 +308,7 @@ public class ScenarioThread extends Thread {
                 micro.sendAsyncStreamPacket(null);
                 micro.receiveAsyncStreamPacket();
                 if (simulateComputations) {
-                    calculateFakeData();
+                    calculateFakeData(computationsMultiplier);
                 }
             }
             for (Microcontroller micro : selectedMicrocontrollers) {
@@ -322,7 +329,7 @@ public class ScenarioThread extends Thread {
     }
 
     private void execASyncSeqSSwwRRww(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
-            final boolean saveStreamData, final boolean simulateComputations) throws IllegalAccessException, MicrocontrollerException {
+            final boolean saveStreamData, final boolean simulateComputations,  short computationsMultiplier) throws IllegalAccessException, MicrocontrollerException {
         for (Microcontroller micro : selectedMicrocontrollers) {
             micro.initAsyncCommunication();
         }
@@ -337,7 +344,7 @@ public class ScenarioThread extends Thread {
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.receiveAsyncStreamPacket();
                 if (simulateComputations) {
-                    calculateFakeData();
+                    calculateFakeData(computationsMultiplier);
                 }
             }
             for (Microcontroller micro : selectedMicrocontrollers) {
@@ -357,7 +364,7 @@ public class ScenarioThread extends Thread {
     }
 
     private void execSyncSeqSRSR(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
-            final boolean saveStreamData, final boolean simulateComputations)
+            final boolean saveStreamData, final boolean simulateComputations,  short computationsMultiplier)
             throws MicrocontrollerException {
         for (int i = 0; i < repeats; i++) {
             final long before = System.nanoTime();
@@ -365,7 +372,7 @@ public class ScenarioThread extends Thread {
                 micro.sendStreamPacket(null);
                 micro.receiveStreamPacket();
                 if (simulateComputations) {
-                    calculateFakeData();
+                    calculateFakeData(computationsMultiplier);
                 }
                 if(saveStreamData) {
                     writeStreamToQueue(micro.getLastSentStreamPacket(),
@@ -382,7 +389,7 @@ public class ScenarioThread extends Thread {
     }
 
     private void execSyncSeqSSRR(Microcontroller[] selectedMicrocontrollers, final int repeats, TestResults testResults,
-            final boolean saveStreamData, final boolean simulateComputations)
+            final boolean saveStreamData, final boolean simulateComputations,  short computationsMultiplier)
             throws MicrocontrollerException {
         for (int i = 0; i < repeats; i++) {
             long before = System.nanoTime();
@@ -392,7 +399,7 @@ public class ScenarioThread extends Thread {
             for (Microcontroller micro : selectedMicrocontrollers) {
                 micro.receiveStreamPacket();
                 if (simulateComputations) {
-                    calculateFakeData();
+                    calculateFakeData(computationsMultiplier);
                 }
                 if(saveStreamData) {
                     writeStreamToQueue(micro.getLastSentStreamPacket(),
@@ -417,7 +424,7 @@ public class ScenarioThread extends Thread {
     }
 
     private synchronized void writeStreamToQueue(byte[] lastSentStreamPacket, byte[] lastReceivedStreamPacket) {
-        streamBuffer.put(lastReceivedStreamPacket);
+        streamBuffer.put(lastSentStreamPacket);
         streamBuffer.put(lastReceivedStreamPacket);
         if(streamBuffer.position() >= STREAM_BUFFER_RANGE) {
             byte[] streamToSave = new byte[STREAM_BUFFER_RANGE];
@@ -439,13 +446,13 @@ public class ScenarioThread extends Thread {
         }
     }
 
-    private double calculateFakeData() {
-        long before = System.nanoTime();
+    private double calculateFakeData(short computationsMultiplier) {
         double sum = 0;
-        for (int i = 0; i < FAKE_ARRAY_SIZE; i++) {
-            sum =+ fakeDataArray0[i] * fakeDataArray1[i];
+        for (int i = 0; i < computationsMultiplier; i++) {
+            for (int j = 0; j < FAKE_ARRAY_SIZE; j++) {
+                sum = +fakeDataArray0[j] * fakeDataArray1[j];
+            }
         }
-        //Log.d(TAG, "Symulating compitation takes: " + String.valueOf(((double)(System.nanoTime() - before)) / 1000000) + " ms");
         return sum;
     }
 }

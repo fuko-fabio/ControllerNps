@@ -8,14 +8,14 @@ public class Scenario {
 
     private int repeats;
     private short streamOutSize;
-    private short[] streamInSizes;
+    private short streamInSize;
     private String[] devices;
     private ThreadPriority threadPriority;
     private Sequence sequence;
     private Hub hub;
     private boolean saveSpeedLogs;
     private boolean saveStreamData;
-    private boolean simulateComputations;
+    private short simulateComputations;
 
     public int getRepeats() {
         return repeats;
@@ -33,12 +33,12 @@ public class Scenario {
         this.streamOutSize = streamOutSize;
     }
 
-    public short[] getStreamInSizes() {
-        return streamInSizes;
+    public short getStreamInSize() {
+        return streamInSize;
     }
 
-    public void setStreamInSizes(short[] streamInSizes) {
-        this.streamInSizes = streamInSizes;
+    public void setStreamInSize(short streamInSize) {
+        this.streamInSize = streamInSize;
     }
 
     public ThreadPriority getThreadPriority() {
@@ -81,11 +81,11 @@ public class Scenario {
         this.saveStreamData = saveStreamData;
     }
 
-    public boolean isSimulateComputations() {
+    public short getSimulateComputations() {
         return simulateComputations;
     }
 
-    public void setSimulateComputations(boolean simulateComputations) {
+    public void setSimulateComputations(short simulateComputations) {
         this.simulateComputations = simulateComputations;
     }
 

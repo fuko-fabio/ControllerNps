@@ -227,12 +227,12 @@
             android:layout_weight="1.40"
             android:text="@string/save_stream_data" />
 
-        <CheckBox
-            android:id="@+id/simulateComputationsCheckbox"
-            android:layout_width="wrap_content"
+        <EditText
+            android:id="@+id/simulateComputationsEditText"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1.40"
-            android:text="@string/simulate" />
+            android:layout_weight="1.61"
+            android:inputType="numberSigned" />
 
         <Button
             android:id="@+id/runButton"

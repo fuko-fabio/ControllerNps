@@ -30,6 +30,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
+import android.view.WindowManager;
 
 import com.nps.architecture.Sequence;
 import com.nps.architecture.ThreadPriority;
@@ -277,6 +278,10 @@ public class MainActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         bindToUsbService();
+        if(getWindow().getAttributes().softInputMode==WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED)
+        {
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+        }
     }
 
     @Override

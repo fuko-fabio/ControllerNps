@@ -7,10 +7,10 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 
 import com.nps.micro.R;
+import com.nps.storage.Storage.Type;
 import com.nps.test.Scenario;
 
 /**
@@ -19,41 +19,29 @@ import com.nps.test.Scenario;
  */
 public class ExternalStorage {
 
-    private static final String PREFIX = "data";
-    private static final String EXTENSION = ".m";
+    private static final String M_PREFIX = "data";
+    private static final String BIN_PREFIX = "bin";
+    private static final String M_EXTENSION = ".m";
+    private static final String BIN_EXTENSION = ".bin";
     private final String logsCatalog;
-    private Context context;
-    private Scenario scenario;
+    private final String binsCatalog;
+    private final Context context;
+    private final Scenario scenario;
+    private final File externalDir;
+    private final String testDate;
 
     public ExternalStorage(Context context, Scenario scenario) {
         this.context = context;
         this.logsCatalog = this.context.getString(R.string.logs_catalog);
+        this.binsCatalog = this.context.getString(R.string.bins_catalog);
         this.scenario = scenario;
-    }
-
-    public File getRootTreeDir() {
-        File dir = new File(ExternalStorageUtils.getSdCardPath() + logsCatalog + File.separator +
-                            getDate() + File.separator + scenario.getSequence().group().name() +
-                            '_' + scenario.getDevices().length + 'D' +
-                            File.separator + scenario.getSequence() + File.separator +
-                            scenario.getThreadPriority() + File.separator);
-        dir.mkdirs();
-        return dir;
-    }
-
-    public File getRootFlatDir() {
-        File dir = new File(ExternalStorageUtils.getSdCardPath() + logsCatalog + File.separator +
-                            getDate() + File.separator + scenario.getSequence().group().descriptor() +
-                            'D' + scenario.getDevices().length + '_' + scenario.getHub().descriptor() +
-                            scenario.getSequence().descriptor() + scenario.getThreadPriority().descriptor() +
-                            File.separator);
-        dir.mkdirs();
-        return dir;
+        this.externalDir = new File(Storage.getStoragePath(Type.EXTERNAL));
+        this.testDate = new SimpleDateFormat("yyyyMM_ddhhmm").format(new Date());
     }
 
     public void save(TestResults data) throws ExternalStorageException {
-        if (ExternalStorageUtils.isAvailable() && ExternalStorageUtils.isWritable()) {
-            File logsFile = new File(getRootFlatDir() + File.separator + logsFilename(data) + EXTENSION);
+        if (Storage.isAvailable() && Storage.isWritable()) {
+            File logsFile = new File(mFilePath());
             try {
                 logsFile.createNewFile();
                 FileOutputStream logsFileOutputStream = new FileOutputStream(logsFile);
@@ -71,12 +59,26 @@ public class ExternalStorage {
         }
     }
 
-    @SuppressLint("SimpleDateFormat")
-    private String getDate() {
-        return new SimpleDateFormat("yyyyMM_dd").format(new Date());
+    public String binFilePath() {
+        File file = new File(externalDir + File.separator + binsCatalog + File.separator + testDirName());
+        file.mkdirs();
+        return file.getAbsolutePath() + File.separator + baseFilename(BIN_PREFIX) + BIN_EXTENSION;
     }
 
-    private String logsFilename(TestResults md) {
-        return PREFIX + '_' + md.getStreamOutSize() + '_' + md.getStreamInSize() + "_x" + md.getRepeats();
+    private String mFilePath() {
+        File file = new File(externalDir + File.separator + logsCatalog + File.separator + testDirName());
+        file.mkdirs();
+        return file.getAbsolutePath() + File.separator + baseFilename(M_PREFIX) + M_EXTENSION;
+    }
+    
+    private String baseFilename(String prefix) {
+        return prefix + '_' + scenario.getStreamOutSize() + '_' + scenario.getStreamInSize() + "_x" + scenario.getRepeats();
+    }
+    
+    private String testDirName() {
+        return testDate + File.separator + scenario.getSequence().group().descriptor() +
+        'D' + scenario.getDevices().length + '_' + scenario.getHub().descriptor() +
+        scenario.getSequence().descriptor() + scenario.getThreadPriority().descriptor() + 'C' +
+        scenario.getSimulateComputations() + "__" + File.separator;
     }
 }

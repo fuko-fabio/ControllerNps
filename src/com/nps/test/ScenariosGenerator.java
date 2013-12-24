@@ -43,29 +43,35 @@ public class ScenariosGenerator {
     private void generateScenariosForDevices(List<Scenario> scenarios, Sequence sequence,
             ThreadPriority priority) {
         if (model.isExtendedDevicesCombination()) {
-        String[] devices = model.getDevices();
-        for(int i = 0; i < devices.length; i++) {
-            String[] testDevices = new String[i + 1];
-            for(int j = 0; j <= i; j++) {
-                testDevices[j] = devices[j];
+            String[] devices = model.getDevices();
+            for(int i = 0; i < devices.length; i++) {
+                String[] testDevices = new String[i + 1];
+                for(int j = 0; j <= i; j++) {
+                    testDevices[j] = devices[j];
+                }
+                generateScenariosForStreamInSizes(scenarios, sequence, priority, testDevices);
             }
-            scenarios.add(buildScenario(sequence, priority, testDevices));
-        }
         } else {
-            scenarios.add(buildScenario(sequence, priority, model.getDevices()));
+            generateScenariosForStreamInSizes(scenarios, sequence, priority, model.getDevices());
         }
     }
 
-    private Scenario buildScenario(Sequence sequence, ThreadPriority priority, String[] devices) {
+    private void generateScenariosForStreamInSizes(List<Scenario> scenarios, Sequence sequence, ThreadPriority priority, String[] devices) {
+        for(short streamInSize : model.getStreamInSizes()) {
+            scenarios.add(buildScenario(sequence, priority, devices, streamInSize));
+        }
+    }
+    
+    private Scenario buildScenario(Sequence sequence, ThreadPriority priority, String[] devices, short streamInSize) {
         return new ScenarioBuilder().withRepeats(model.getRepeats())
                 .withSequence(sequence)
-                .withStreamInSize(model.getStreamInSizes())
+                .withStreamInSize(streamInSize)
                 .withStreamOutSize(model.getStreamOutSize())
                 .withThreadPriority(priority)
                 .withDevices(devices)
                 .withHub(model.isFastHub() ? Hub.FAST : Hub.NORMAL)
                 .isSaveSpeedLogs(model.isSaveLogs())
                 .isSaveStreamData(model.isSaveStreams())
-                .isSimulateComputations(model.isSimulateComputations()).build();
+                .withSimulateComputations(model.getSimulateComputations()).build();
     }
 }

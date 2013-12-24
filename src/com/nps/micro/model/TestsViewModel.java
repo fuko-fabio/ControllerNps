@@ -12,28 +12,29 @@ public class TestsViewModel {
     private short[] streamInSize;
     private String[] devices;
     private Sequence[] sequences;
+    private short simulateComputations;
     private boolean saveLogs;
     private boolean saveStreams;
     private boolean normalThreadPriority;
     private boolean hiJavaThreadPriority;
     private boolean hiAndroidThreadPriority;
-    private boolean simulateComputations;
     private boolean extendedDevicesCombination;
     private boolean fastHub;
 
     public TestsViewModel() {
         super();
-        repeats = 1;
+        repeats = 10;
         streamOutSize = 16;
         streamInSize = new short[] { 48 };
         devices = null;
-        sequences = new Sequence[] {Sequence.SRSR};
+        sequences = new Sequence[] {Sequence.SSRR_wwww};
         normalThreadPriority = false;
         hiJavaThreadPriority = false;
-        hiAndroidThreadPriority = false;
+        hiAndroidThreadPriority = true;
         saveLogs = false;
         saveStreams = false;
         extendedDevicesCombination = false;
+        simulateComputations = 0;
         setFastHub(false);
     }
 
@@ -93,11 +94,11 @@ public class TestsViewModel {
         this.hiAndroidThreadPriority = hiAndroidThreadPriority;
     }
 
-    public boolean isSimulateComputations() {
+    public short getSimulateComputations() {
         return simulateComputations;
     }
 
-    public void setSimulateComputations(boolean simulateComputations) {
+    public void setSimulateComputations(short simulateComputations) {
         this.simulateComputations = simulateComputations;
     }
 

@@ -8,14 +8,14 @@ public class ScenarioBuilder {
 
     private int repeats;
     private short streamOutSize;
-    private short[] streamInSize;
+    private short streamInSize;
     private String[] devices;
     private ThreadPriority threadPriority;
     private Sequence sequence;
     private Hub hub;
     private boolean saveSpeedLogs;
     private boolean saveStreamData;
-    private boolean simulateComputations;
+    private short simulateComputations;
 
     public ScenarioBuilder withRepeats(int repeats) {
         this.repeats = repeats;
@@ -27,7 +27,7 @@ public class ScenarioBuilder {
         return this;
     }
 
-    public ScenarioBuilder withStreamInSize(short[] streamInSize) {
+    public ScenarioBuilder withStreamInSize(short streamInSize) {
         this.streamInSize = streamInSize;
         return this;
     }
@@ -57,7 +57,7 @@ public class ScenarioBuilder {
         return this;
     }
 
-    public ScenarioBuilder isSimulateComputations(boolean simulateComputations) {
+    public ScenarioBuilder withSimulateComputations(short simulateComputations) {
         this.simulateComputations = simulateComputations;
         return this;
     }
@@ -75,7 +75,7 @@ public class ScenarioBuilder {
         scenario.setSaveStreamData(saveStreamData);
         scenario.setSequence(sequence);
         scenario.setSimulateComputations(simulateComputations);
-        scenario.setStreamInSizes(streamInSize);
+        scenario.setStreamInSize(streamInSize);
         scenario.setStreamOutSize(streamOutSize);
         scenario.setThreadPriority(threadPriority);
         scenario.setHub(hub);
