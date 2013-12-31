@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.text.Editable;
@@ -17,11 +19,15 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.nps.architecture.Sequence;
 import com.nps.micro.R;
 import com.nps.micro.model.TestsViewModel;
+import com.nps.storage.Storage;
+import com.nps.test.Scenario;
+import com.nps.test.ScenariosGenerator;
 
 public class TestsSectionFragment extends BaseSectionFragment {
 
@@ -52,6 +58,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private List<String> availableMicrocontrollers  = new ArrayList<String>();
     private List<String> selectedMicrocontrollers = new ArrayList<String>();
     private List<Sequence> selectedSequences = new ArrayList<Sequence>();
+    private RadioGroup radioStorageGroup;
 
     public TestsSectionFragment() {
         this.layout = R.layout.tests;
@@ -59,6 +66,38 @@ public class TestsSectionFragment extends BaseSectionFragment {
 
     public void setListener( TestsFragmentListener listener) {
         this.listener = listener;
+    }
+
+    private void prepareScenarios() {
+        ScenariosGenerator scenariosGeneratior = new ScenariosGenerator(model);
+        final List<Scenario> scenarios = scenariosGeneratior.generate();
+        List<CharSequence> items = new ArrayList<CharSequence>();
+        for (Scenario scenario : scenarios) {
+            items.add(scenario.toString());
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(R.string.test_scenatios_title)
+               .setMessage(R.string.test_scenatios_info)
+               .setItems(items.toArray(new CharSequence[items.size()]), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // TODO Auto-generated method stub
+                    
+                }
+            })
+               .setPositiveButton(R.string.run, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                       if (listener != null) {
+                           listener.onRunUsbTest(scenarios);
+                       }
+                   }
+               })
+               .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                       dialog.dismiss();
+                   }
+               });
+        builder.create().show();
     }
 
     @Override
@@ -71,17 +110,19 @@ public class TestsSectionFragment extends BaseSectionFragment {
         runButton.setOnClickListener(new OnClickListener(){
             @Override
             public void onClick(View v) {
-                if (listener != null) {
-                    listener.onRunUsbTest(model);
-                }
-            }});
+                prepareScenarios();
+            }
+        });
 
         repeatsInput = (EditText) rootView.findViewById(R.id.repeatsInput);
         repeatsInput.setText(String.valueOf(model.getRepeats()));
         repeatsInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
-                model.setRepeats(Integer.valueOf(s.toString()));
+                String val = s.toString();
+                if(!val.isEmpty() && StringUtils.isNumeric(val)) {
+                    model.setRepeats(Integer.valueOf(s.toString()));
+                }
             }
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -111,7 +152,10 @@ public class TestsSectionFragment extends BaseSectionFragment {
         outSizeInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
-                model.setStreamOutSize(Short.valueOf(s.toString()));
+                String val = s.toString();
+                if(!val.isEmpty() && StringUtils.isNumeric(val)) {
+                    model.setRepeats(Integer.valueOf(s.toString()));
+                }
             }
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -247,6 +291,23 @@ public class TestsSectionFragment extends BaseSectionFragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 model.setFastHub(isChecked);
             }});
+
+        radioStorageGroup = (RadioGroup) rootView.findViewById(R.id.storageRadioGroup);
+        
+        radioStorageGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                case R.id.internalStorageRadio:
+                    model.setStorageType(Storage.Type.INTERNAL);
+                    break;
+                case R.id.externalStorageRadio:
+                    model.setStorageType(Storage.Type.EXTERNAL);
+                    break;
+                }
+            }
+        });
 
         createSequenceChooser(rootView);
         createDeviceChooser(rootView, runButton);

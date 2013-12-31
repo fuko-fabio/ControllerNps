@@ -1,6 +1,7 @@
 package com.nps.micro.model;
 
 import com.nps.architecture.Sequence;
+import com.nps.storage.Storage;
 
 /**
  * @author Norbert Pabian www.npsoftware.pl
@@ -20,6 +21,7 @@ public class TestsViewModel {
     private boolean hiAndroidThreadPriority;
     private boolean extendedDevicesCombination;
     private boolean fastHub;
+    private Storage.Type storageType;
 
     public TestsViewModel() {
         super();
@@ -35,7 +37,8 @@ public class TestsViewModel {
         saveStreams = false;
         extendedDevicesCombination = false;
         simulateComputations = 0;
-        setFastHub(false);
+        fastHub = false;
+        storageType = Storage.Type.EXTERNAL;
     }
 
     public int getRepeats() {
@@ -140,5 +143,13 @@ public class TestsViewModel {
 
     public void setFastHub(boolean fastHub) {
         this.fastHub = fastHub;
+    }
+
+    public Storage.Type getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(Storage.Type storageType) {
+        this.storageType = storageType;
     }
 }

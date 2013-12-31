@@ -14,6 +14,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbDevice;
@@ -28,13 +29,9 @@ import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.nps.architecture.Sequence;
-import com.nps.architecture.ThreadPriority;
-import com.nps.micro.model.TestsViewModel;
 import com.nps.storage.ExternalStorage;
 import com.nps.test.Scenario;
 import com.nps.test.ScenarioThread;
-import com.nps.test.ScenariosGenerator;
 import com.nps.usb.UsbGateException;
 import com.nps.usb.microcontroller.Microcontroller;
 
@@ -64,8 +61,11 @@ public class UsbService extends Service {
     static ArrayList<Messenger> mClients = new ArrayList<Messenger>();
     static final int MSG_REGISTER_CLIENT = 1;
     static final int MSG_UNREGISTER_CLIENT = 2;
-    static final int MSG_TEST_STATUS = 3;
     static final int MSG_STATUS = 4;
+
+    private static final String KILL_ACTION = "com.nps.micro.killService";
+
+    static final String MSG_STATUS_CONTENT = "status";
 
     // Target we publish for clients to send messages to IncomingHandler.
     private final Messenger mMessenger = new Messenger(new IncomingHandler());
@@ -85,6 +85,17 @@ public class UsbService extends Service {
 
         public IBinder getMessenger() {
             return mMessenger.getBinder();
+        }
+    }
+
+    public class AlarmReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if(KILL_ACTION.equals(action)) {
+                Log.v("shuffTest","Pressed YES");
+            }
         }
     }
 
@@ -153,7 +164,6 @@ public class UsbService extends Service {
                                             .setContentText(getText(R.string.local_service_running))
                                             .setContentTitle(getText(R.string.local_service_notification)).build();
         notificationManager.notify(NOTIFICATION, notification);
-        //sendStatusMessage(false);
     }
 
     /**
@@ -163,17 +173,24 @@ public class UsbService extends Service {
         String contentText = getText(R.string.local_service_testing).toString() +
                              ' ' + scenario.getSequence().toString() +
                              ' ' + scenario.getThreadPriority().toString() +
-                             " In size: " + scenario.getStreamInSize();
+                             "packet In size: " + scenario.getStreamInSize() +
+                             " on " + scenario.getDevices().length + " devices";
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        
+        Intent killIntent = new Intent();  
+        killIntent.setAction(KILL_ACTION);
+        PendingIntent pendingIntentKill = PendingIntent.getBroadcast(this, 12345, killIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                                             .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
                                             .setSmallIcon(R.drawable.ic_launcher)
                                             .setContentText(contentText)
-                                            .setContentTitle(getText(R.string.local_service_notification)).build();
+                                            .setContentTitle(getText(R.string.local_service_notification))
+                                            .addAction(R.drawable.ic_launcher, getString(R.string.kill), pendingIntentKill).build();
 
         notificationManager.notify(NOTIFICATION, notification);
-        sendTestingStatusMessage(scenario.getSequence(), scenario.getThreadPriority(), scenario.getStreamInSize());
+        sendStatusMessage(contentText);
     }
 
     /**
@@ -188,7 +205,7 @@ public class UsbService extends Service {
                                             .setContentText(getText(R.string.local_service_test_done))
                                             .setContentTitle(getText(R.string.local_service_notification)).build();
         notificationManager.notify(NOTIFICATION, notification);
-        sendStatusMessage(false);
+        sendStatusMessage(getString(R.string.ready));
     }
 
     private void initMicrocontrollers() {
@@ -210,9 +227,7 @@ public class UsbService extends Service {
         }
     }
     
-    public void testCommunication(TestsViewModel model) {
-        ScenariosGenerator scenariosGeneratior = new ScenariosGenerator(model);
-        List<Scenario> scenarios = scenariosGeneratior.generate();
+    public void testCommunication(List<Scenario> scenarios) {
         for(Scenario scenario : scenarios) {
             testScenarioThread(scenario);
         }
@@ -288,31 +303,11 @@ public class UsbService extends Service {
         }
     }
 
-    private void sendTestingStatusMessage(Sequence sequence, ThreadPriority threadPriority, short streamInSize) {
+    private void sendStatusMessage(String status) {
         for (int i = mClients.size() - 1; i >= 0; i--) {
             try {
                 Bundle b = new Bundle();
-                b.putSerializable("sequence", sequence);
-                b.putSerializable("threadPriority", threadPriority);
-                b.putShort("streamInSize", streamInSize);
-                Message message = Message.obtain(null, MSG_TEST_STATUS);
-                message.setData(b);
-                mClients.get(i).send(message);
-
-            } catch (RemoteException e) {
-                // The client is dead. Remove it from the list; we are going
-                // through the list from back to front so this is safe to do
-                // inside the loop.
-                mClients.remove(i);
-            }
-        }
-    }
-
-    private void sendStatusMessage(boolean isBusy) {
-        for (int i = mClients.size() - 1; i >= 0; i--) {
-            try {
-                Bundle b = new Bundle();
-                b.putBoolean("isBusy", isBusy);
+                b.putString(MSG_STATUS_CONTENT, status);
                 Message message = Message.obtain(null, MSG_STATUS);
                 message.setData(b);
                 mClients.get(i).send(message);

@@ -72,6 +72,7 @@ public class ScenariosGenerator {
                 .withHub(model.isFastHub() ? Hub.FAST : Hub.NORMAL)
                 .isSaveSpeedLogs(model.isSaveLogs())
                 .isSaveStreamData(model.isSaveStreams())
-                .withSimulateComputations(model.getSimulateComputations()).build();
+                .withSimulateComputations(model.getSimulateComputations())
+                .withStorageType(model.getStorageType()).build();
     }
 }

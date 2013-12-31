@@ -1,9 +1,11 @@
 package com.nps.micro.view;
 
-import com.nps.micro.model.TestsViewModel;
+import java.util.List;
+
+import com.nps.test.Scenario;
 
 public interface TestsFragmentListener {
 
-    public void onRunUsbTest(TestsViewModel model);
+    public void onRunUsbTest(List<Scenario> scenarios);
 
 }

@@ -3,6 +3,7 @@ package com.nps.test;
 import com.nps.architecture.Hub;
 import com.nps.architecture.Sequence;
 import com.nps.architecture.ThreadPriority;
+import com.nps.storage.Storage;
 
 public class Scenario {
 
@@ -16,6 +17,7 @@ public class Scenario {
     private boolean saveSpeedLogs;
     private boolean saveStreamData;
     private short simulateComputations;
+    private Storage.Type storageType;
 
     public int getRepeats() {
         return repeats;
@@ -95,5 +97,22 @@ public class Scenario {
 
     public void setHub(Hub hub) {
         this.hub = hub;
+    }
+
+    public Storage.Type getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(Storage.Type storageType) {
+        this.storageType = storageType;
+    }
+
+    @Override
+    public String toString() {
+        return sequence.name() + ' ' +
+               threadPriority.name() + ' ' +
+               "devices: " + devices.length + ' ' + 
+               "stream In size: " + streamInSize + ' ' + 
+               "repeats: " + repeats;
     }
 }

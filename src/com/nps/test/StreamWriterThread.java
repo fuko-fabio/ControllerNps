@@ -9,13 +9,10 @@ import java.util.concurrent.BlockingQueue;
 import android.util.Log;
 
 import com.nps.storage.ExternalStorage;
-import com.nps.storage.Storage.Type;
 
 public class StreamWriterThread extends Thread {
 
     private static final String TAG = "StreamWriterThread";
-
-    private static final String STREAM_FILENAME = "stream.b";
 
     private final ExternalStorage externalStorage;
     private final BlockingQueue<byte[]> streamQueue;
@@ -33,7 +30,7 @@ public class StreamWriterThread extends Thread {
         FileOutputStream fos = null;
         try {
             File file = new File(externalStorage.binFilePath());
-            fos = new FileOutputStream(file, true);
+            fos = new FileOutputStream(file, false);
         } catch (FileNotFoundException e) {
             Log.e(TAG, "Couldn't create file cause: " + e.getMessage());
             return;
@@ -41,7 +38,7 @@ public class StreamWriterThread extends Thread {
         while (isRunning) {
             try {
                 byte[] streamData = streamQueue.take();
-                Log.d(TAG, "Writing " + streamData.length + "bytes to file...");
+                //Log.d(TAG, "Writing " + streamData.length + "bytes to file...");
                 fos.write(streamData);
             } catch (InterruptedException e) {
                 Log.e(TAG, "Couldn't get data to write from queue cause: " + e.getMessage());

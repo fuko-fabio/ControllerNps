@@ -3,6 +3,7 @@ package com.nps.test;
 import com.nps.architecture.Hub;
 import com.nps.architecture.Sequence;
 import com.nps.architecture.ThreadPriority;
+import com.nps.storage.Storage;
 
 public class ScenarioBuilder {
 
@@ -16,6 +17,7 @@ public class ScenarioBuilder {
     private boolean saveSpeedLogs;
     private boolean saveStreamData;
     private short simulateComputations;
+    private Storage.Type storageType;
 
     public ScenarioBuilder withRepeats(int repeats) {
         this.repeats = repeats;
@@ -67,6 +69,11 @@ public class ScenarioBuilder {
         return this;
     }
 
+    public ScenarioBuilder withStorageType(Storage.Type storageType) {
+        this.storageType = storageType;
+        return this;
+    }
+
     public Scenario build() {
         Scenario scenario = new Scenario();
         scenario.setDevices(devices);
@@ -79,6 +86,7 @@ public class ScenarioBuilder {
         scenario.setStreamOutSize(streamOutSize);
         scenario.setThreadPriority(threadPriority);
         scenario.setHub(hub);
+        scenario.setStorageType(storageType);
         return scenario;
     }
 }

@@ -32,14 +32,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.WindowManager;
 
-import com.nps.architecture.Sequence;
-import com.nps.architecture.ThreadPriority;
-import com.nps.micro.model.TestsViewModel;
 import com.nps.micro.view.Dialogs;
 import com.nps.micro.view.GraphSectionFragment;
 import com.nps.micro.view.HomeSectionFragment;
 import com.nps.micro.view.TestsFragmentListener;
 import com.nps.micro.view.TestsSectionFragment;
+import com.nps.test.Scenario;
 import com.nps.usb.DeviceIds;
 
 /**
@@ -149,13 +147,8 @@ public class MainActivity extends FragmentActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
             case UsbService.MSG_STATUS:
-                mSectionsPagerAdapter.updateStatus(msg.getData().getBoolean("isBusy"));
-                break;
-            case UsbService.MSG_TEST_STATUS:
                 Bundle b = msg.getData();
-                mSectionsPagerAdapter.updateStatus((Sequence) b.getSerializable("sequence"),
-                                                   (ThreadPriority) b.getSerializable("threadPriority"),
-                                                   b.getShort("streamInSize"));
+                mSectionsPagerAdapter.updateStatus(b.getString(UsbService.MSG_STATUS_CONTENT));
                 break;
             default:
                 super.handleMessage(msg);
@@ -383,10 +376,11 @@ public class MainActivity extends FragmentActivity {
             super(fm);
             testsFragment = new TestsSectionFragment();
             testsFragment.setListener(new TestsFragmentListener() {
+
                 @Override
-                public void onRunUsbTest(TestsViewModel model) {
+                public void onRunUsbTest(List<Scenario> scenarios) {
                     if (microUsbService != null) {
-                        microUsbService.testCommunication(model);
+                        microUsbService.testCommunication(scenarios);
                     }
                 }
             });
@@ -395,16 +389,8 @@ public class MainActivity extends FragmentActivity {
             fragments = new Fragment[] { testsFragment, homeFragment, graphFragment };
         }
 
-        public void updateStatus(Sequence sequence, ThreadPriority priority, short streamInSize) {
-            testsFragment.setStatus("Testing " + sequence.toString() + ' ' + priority.toString() + " stream in size " + streamInSize);
-        }
-
-        public void updateStatus(boolean isBusy) {
-            if (isBusy) {
-                testsFragment.setStatus("Busy");
-            } else {
-                testsFragment.setStatus("Active");
-            }
+        public void updateStatus(String status) {
+            testsFragment.setStatus(status);
         }
 
         @Override

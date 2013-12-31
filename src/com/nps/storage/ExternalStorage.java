@@ -10,7 +10,6 @@ import java.util.Date;
 import android.content.Context;
 
 import com.nps.micro.R;
-import com.nps.storage.Storage.Type;
 import com.nps.test.Scenario;
 
 /**
@@ -23,6 +22,8 @@ public class ExternalStorage {
     private static final String BIN_PREFIX = "bin";
     private static final String M_EXTENSION = ".m";
     private static final String BIN_EXTENSION = ".bin";
+    //private static final String DATE_FORMAT = "yyyyMM_ddhhmm";
+    private static final String DATE_FORMAT = "yyyyMM_dd";
     private final String logsCatalog;
     private final String binsCatalog;
     private final Context context;
@@ -35,8 +36,8 @@ public class ExternalStorage {
         this.logsCatalog = this.context.getString(R.string.logs_catalog);
         this.binsCatalog = this.context.getString(R.string.bins_catalog);
         this.scenario = scenario;
-        this.externalDir = new File(Storage.getStoragePath(Type.EXTERNAL));
-        this.testDate = new SimpleDateFormat("yyyyMM_ddhhmm").format(new Date());
+        this.externalDir = new File(Storage.getStoragePath(scenario.getStorageType()));
+        this.testDate = new SimpleDateFormat(DATE_FORMAT).format(new Date());
     }
 
     public void save(TestResults data) throws ExternalStorageException {
