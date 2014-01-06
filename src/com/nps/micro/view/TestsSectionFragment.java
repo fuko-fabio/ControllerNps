@@ -77,26 +77,26 @@ public class TestsSectionFragment extends BaseSectionFragment {
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.test_scenatios_title)
-               .setMessage(R.string.test_scenatios_info)
-               .setItems(items.toArray(new CharSequence[items.size()]), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    // TODO Auto-generated method stub
-                    
-                }
-            })
-               .setPositiveButton(R.string.run, new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int id) {
-                       if (listener != null) {
-                           listener.onRunUsbTest(scenarios);
-                       }
-                   }
-               })
-               .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int id) {
-                       dialog.dismiss();
-                   }
-               });
+                .setItems(items.toArray(new CharSequence[items.size()]),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // TODO Auto-generated method stub
+
+                            }
+                        })
+                .setPositiveButton(R.string.run, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        if (listener != null) {
+                            listener.onRunUsbTest(scenarios);
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                });
         builder.create().show();
     }
 
@@ -436,7 +436,9 @@ public class TestsSectionFragment extends BaseSectionFragment {
         if (availableMicrocontrollers.isEmpty()) {
             runButton.setEnabled(true);
         }
-        selectedMicrocontrollers.addAll(this.availableMicrocontrollers);
+        if(selectedMicrocontrollers.isEmpty()) {
+            selectedMicrocontrollers.addAll(this.availableMicrocontrollers);
+        }
     }
 
     public void setStatus(String string) {

@@ -63,17 +63,17 @@ public class ExternalStorage {
     public String binFilePath() {
         File file = new File(externalDir + File.separator + binsCatalog + File.separator + testDirName());
         file.mkdirs();
-        return file.getAbsolutePath() + File.separator + baseFilename(BIN_PREFIX) + BIN_EXTENSION;
+        return file.getAbsolutePath() + File.separator + BIN_PREFIX + baseFilename() + BIN_EXTENSION;
     }
 
     private String mFilePath() {
         File file = new File(externalDir + File.separator + logsCatalog + File.separator + testDirName());
         file.mkdirs();
-        return file.getAbsolutePath() + File.separator + baseFilename(M_PREFIX) + M_EXTENSION;
+        return file.getAbsolutePath() + File.separator + M_PREFIX + baseFilename() + M_EXTENSION;
     }
     
-    private String baseFilename(String prefix) {
-        return prefix + '_' + scenario.getStreamOutSize() + '_' + scenario.getStreamInSize() + "_x" + scenario.getRepeats();
+    private String baseFilename() {
+        return '_' + scenario.getStreamOutSize() + '_' + scenario.getStreamInSize() + "_x" + scenario.getRepeats() + "_d" + scenario.getDevices().length;
     }
     
     private String testDirName() {

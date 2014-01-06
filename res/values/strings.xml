@@ -54,12 +54,12 @@
     <string name="save_logs">Save speed logs to file</string>
     <string name="run">Run</string>
     <string name="select">Select</string>
-    <string name="device">Device</string>
+    <string name="device">Devices</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="all">All</string>
     <string name="none">None</string>
-    <string name="sequence">Sequence</string>
+    <string name="sequence">Sequence and Thread Priority</string>
     <string name="normal_priority">Normal Priority</string>
     <string name="hi_java_priority">Hi Priority Java Based</string>
     <string name="hi_android_priority">Hi Priority Android Based</string>
@@ -68,10 +68,12 @@
     <string name="extended_devices">Extended Devices Combination</string>
     <string name="fast_hub">Fast Usb hub</string>
     <string name="status">Status: </string>
-    <string name="internal">Internal</string>
-    <string name="external">External</string>
-    <string name="test_scenatios_title">Run test scenatios</string>
-    <string name="test_scenatios_info">Are you sure to run following test scenatios?</string>
+    <string name="internal">Use Internal Memory</string>
+    <string name="external">Use External Memory</string>
+    <string name="test_scenatios_title">Run following test scenatios</string>
     <string name="kill">Kill service</string>
     <string name="ready">Ready</string>
+    <string name="memory">Logs</string>
+    <string name="simulations">Simulations</string>
+    <string name="simulations_info">Simulate coputations after each send/read USB data. Enter number of simulation loops (0 = off, 1 = 3ms, 2 = 6ms etc)</string>
 </resources>

@@ -27,7 +27,8 @@ public class ScenarioThread extends Thread {
     private final Microcontroller[] microcontrollers;
 
     private static final int STREAM_QUEUE_SIZE = 10;
-    private static final int STREAM_BUFFER_RANGE = 64000;
+    private static final int STREAM_BUFFER_RANGE = 8388608; // 8mb
+    //private static final int STREAM_BUFFER_RANGE = 512000; // 500kb
     private static final int STREAM_BUFFER_SIZE = STREAM_BUFFER_RANGE * 3;
     private BlockingQueue<byte[]> streamQueue;
     private ByteBuffer streamBuffer;

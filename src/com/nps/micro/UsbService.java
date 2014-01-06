@@ -173,7 +173,7 @@ public class UsbService extends Service {
         String contentText = getText(R.string.local_service_testing).toString() +
                              ' ' + scenario.getSequence().toString() +
                              ' ' + scenario.getThreadPriority().toString() +
-                             "packet In size: " + scenario.getStreamInSize() +
+                             " packet In size: " + scenario.getStreamInSize() +
                              " on " + scenario.getDevices().length + " devices";
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
