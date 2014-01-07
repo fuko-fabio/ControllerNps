@@ -1,5 +1,6 @@
 package com.nps.micro.model;
 
+import com.nps.architecture.MemoryUnit;
 import com.nps.architecture.Sequence;
 import com.nps.storage.Storage;
 
@@ -22,6 +23,8 @@ public class TestsViewModel {
     private boolean extendedDevicesCombination;
     private boolean fastHub;
     private Storage.Type storageType;
+    private int streamBufferSize;
+    private MemoryUnit streamBufferUnit;
 
     public TestsViewModel() {
         super();
@@ -39,6 +42,8 @@ public class TestsViewModel {
         simulateComputations = 0;
         fastHub = false;
         storageType = Storage.Type.EXTERNAL;
+        setStreamBufferSize(500);
+        setStreamBufferUnit(MemoryUnit.KB);
     }
 
     public int getRepeats() {
@@ -151,5 +156,21 @@ public class TestsViewModel {
 
     public void setStorageType(Storage.Type storageType) {
         this.storageType = storageType;
+    }
+
+    public int getStreamBufferSize() {
+        return streamBufferSize;
+    }
+
+    public void setStreamBufferSize(int streamBufferSize) {
+        this.streamBufferSize = streamBufferSize;
+    }
+
+    public MemoryUnit getStreamBufferUnit() {
+        return streamBufferUnit;
+    }
+
+    public void setStreamBufferUnit(MemoryUnit streamBufferUnit) {
+        this.streamBufferUnit = streamBufferUnit;
     }
 }

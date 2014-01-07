@@ -18,6 +18,7 @@ public class ScenarioBuilder {
     private boolean saveStreamData;
     private short simulateComputations;
     private Storage.Type storageType;
+    private int streamBufferSize;
 
     public ScenarioBuilder withRepeats(int repeats) {
         this.repeats = repeats;
@@ -73,6 +74,11 @@ public class ScenarioBuilder {
         this.storageType = storageType;
         return this;
     }
+    
+    public ScenarioBuilder withStreamBufferSize(int streamBufferSize) {
+        this.streamBufferSize = streamBufferSize;
+        return this;
+    }
 
     public Scenario build() {
         Scenario scenario = new Scenario();
@@ -86,6 +92,7 @@ public class ScenarioBuilder {
         scenario.setStreamOutSize(streamOutSize);
         scenario.setThreadPriority(threadPriority);
         scenario.setHub(hub);
+        scenario.setStreamBufferSize(streamBufferSize);
         scenario.setStorageType(storageType);
         return scenario;
     }

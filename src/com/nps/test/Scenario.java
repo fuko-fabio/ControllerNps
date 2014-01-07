@@ -18,6 +18,7 @@ public class Scenario {
     private boolean saveStreamData;
     private short simulateComputations;
     private Storage.Type storageType;
+    private int streamBufferSize;
 
     public int getRepeats() {
         return repeats;
@@ -114,5 +115,13 @@ public class Scenario {
                "devices: " + devices.length + ' ' + 
                "stream In size: " + streamInSize + ' ' + 
                "repeats: " + repeats;
+    }
+
+    public int getStreamBufferSize() {
+        return streamBufferSize;
+    }
+
+    public void setStreamBufferSize(int streamBufferSize) {
+        this.streamBufferSize = streamBufferSize;
     }
 }

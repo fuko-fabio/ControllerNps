@@ -1,253 +1,359 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/datailsLayout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin" >
-    
+    android:id="@+id/mainLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp" >
+        android:layout_margin="10dp" >
 
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginRight="5dp"
             android:text="@string/status"
             android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <ProgressBar
+            android:id="@+id/statusProgress"
+            android:layout_width="27dp"
+            android:layout_height="27dp"
+            android:layout_marginRight="5dp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/statusText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/status"
             android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    </LinearLayout>
-    
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" >
-
-        <TextView
-            android:id="@+id/repeatsLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/repeats" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-
-            <EditText
-                android:id="@+id/repeatsInput"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.71"
-                android:inputType="numberSigned" />
-
-            <Button
-                android:id="@+id/setRepeatsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.15"
-                android:text="@string/select" />
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/outSizeLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/out_size" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" >
-
-            <EditText
-                android:id="@+id/packetOutSizeInput"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.71"
-                android:inputType="numberSigned" />
-
-            <Button
-                android:id="@+id/setOutSizeButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.15"
-                android:text="@string/select" />
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/inSizeLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/in_size" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="101dp" >
-
-            <EditText
-                android:id="@+id/packetInSizeInput"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.71"
-                android:inputType="text"
-                android:scrollbars = "horizontal" />
-
-            <Button
-                android:id="@+id/setInSizeButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.15"
-                android:text="@string/select" />
-
-        </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical" >
-
-        <TextView
-            android:id="@+id/deviceLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/device" />
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="10dp" >
 
         <LinearLayout
+            android:id="@+id/mainScrollLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.21" >
+            android:orientation="vertical" >
 
             <TextView
-                android:id="@+id/selectedDeviceText"
-                android:layout_width="0dp"
+                android:id="@+id/repeatsLabel"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.71"
-                android:scrollbars="vertical"
+                android:text="@string/repeats"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
-            <Button
-                android:id="@+id/selectDeviceButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.15"
-                android:text="@string/select" />
-        </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
 
-        <TextView
-            android:id="@+id/sequenceLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/sequence" />
+                <EditText
+                    android:id="@+id/repeatsInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.71"
+                    android:inputType="numberSigned" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.46" >
+                <Button
+                    android:id="@+id/setRepeatsButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.10"
+                    android:text="@string/select" />
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/selectedSequenceText"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.71"
-                android:maxLines="5"
-                android:scrollbars="vertical"
+                android:id="@+id/outSizeLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/out_size"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
-            <Button
-                android:id="@+id/selectSequenceButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.10"
-                android:text="@string/select" />
-        </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+                <EditText
+                    android:id="@+id/packetOutSizeInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.71"
+                    android:inputType="numberSigned" >
 
-            <CheckBox
-                android:id="@+id/normalPriorityCheckbox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.40"
-                android:text="@string/normal_priority" />
+                    <requestFocus />
+                </EditText>
 
-            <CheckBox
-                android:id="@+id/hiJavaPriorityCheckbox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.40"
-                android:text="@string/hi_java_priority" />
+                <Button
+                    android:id="@+id/setOutSizeButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.10"
+                    android:text="@string/select" />
+            </LinearLayout>
 
-            <CheckBox
-                android:id="@+id/hiAndroidPriorityCheckbox"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/inSizeLabel"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.40"
-                android:text="@string/hi_android_priority" />
+                android:text="@string/in_size"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+
+                <EditText
+                    android:id="@+id/packetInSizeInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.71"
+                    android:inputType="text" />
+
+                <Button
+                    android:id="@+id/setInSizeButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|center|fill_vertical"
+                    android:layout_weight="0.10"
+                    android:text="@string/select" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/deviceLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/device"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <android.widget.DynamicListView
+	            android:id="@+id/selectedDevicesDynamicList"
+	            android:background="#0000"
+	            android:layout_width="match_parent"
+	            android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.40" >
+
+                <TextView
+                    android:id="@+id/selectedDeviceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.71"
+                    android:scrollbars="vertical"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <Button
+                    android:id="@+id/selectDeviceButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.10"
+                    android:text="@string/select" />
+            </LinearLayout>
 
             <CheckBox
                 android:id="@+id/extendedDevicesCheckBox"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.40"
                 android:text="@string/extended_devices" />
 
-            <CheckBox
-                android:id="@+id/fastHubCheckBox"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/sequenceLabel"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.40"
-                android:text="@string/fast_hub" />
+                android:layout_marginTop="10dp"
+                android:text="@string/sequence"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.46" >
+
+                <TextView
+                    android:id="@+id/selectedSequenceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.71"
+                    android:scrollbars="vertical"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <Button
+                    android:id="@+id/selectSequenceButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.10"
+                    android:text="@string/select" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/threadLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/thread"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <CheckBox
+                    android:id="@+id/normalPriorityCheckbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.40"
+                    android:text="@string/normal_priority" />
+
+                <CheckBox
+                    android:id="@+id/hiJavaPriorityCheckbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.40"
+                    android:text="@string/hi_java_priority" />
+
+                <CheckBox
+                    android:id="@+id/hiAndroidPriorityCheckbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.40"
+                    android:text="@string/hi_android_priority" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/memoryLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/memory"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.46"
+                android:orientation="vertical" >
+
+                <CheckBox
+                    android:id="@+id/saveLogsCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/save_logs" />
+
+                <CheckBox
+                    android:id="@+id/saveStreamDataCheckbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/save_stream_data" />
+
+                <RadioGroup
+                    android:id="@+id/storageRadioGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" >
+
+                    <RadioButton
+                        android:id="@+id/internalStorageRadio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/internal" />
+
+                    <RadioButton
+                        android:id="@+id/externalStorageRadio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/external" />
+                </RadioGroup>
+
+                <TextView
+                    android:id="@+id/bufferSizeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/buffer_size" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" >
+
+                    <EditText
+                        android:id="@+id/bufferSizeEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
+
+                    <Spinner
+                        android:id="@+id/memoryUnitSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:entries="@array/memory_unit"
+                        android:prompt="@string/select_memory_unit" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/simulationsLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/simulations"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/textView1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/simulations_info" />
+
+                <EditText
+                    android:id="@+id/simulateComputationsEditText"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberSigned" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp" >
+
+                <CheckBox
+                    android:id="@+id/fastHubCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.40"
+                    android:text="@string/fast_hub" />
+
+                <Button
+                    android:id="@+id/runButton"
+                    android:layout_width="179dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="0.06"
+                    android:text="@string/run" />
+            </LinearLayout>
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp" >
-
-            <CheckBox
-                android:id="@+id/saveLogsCheckBox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.40"
-                android:text="@string/save_logs" />
-
-            <CheckBox
-                android:id="@+id/saveStreamDataCheckbox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.40"
-                android:text="@string/save_stream_data" />
-
-        <EditText
-            android:id="@+id/simulateComputationsEditText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.61"
-            android:inputType="numberSigned" />
-
-            <Button
-                android:id="@+id/runButton"
-                android:layout_width="179dp"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_weight="0.06"
-                android:text="@string/run" />
-        </LinearLayout>
-    </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

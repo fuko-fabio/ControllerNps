@@ -14,14 +14,22 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.DynamicListView;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.StableArrayAdapter;
 import android.widget.TextView;
 
+import com.nps.architecture.MemoryUnit;
 import com.nps.architecture.Sequence;
 import com.nps.micro.R;
 import com.nps.micro.model.TestsViewModel;
@@ -59,6 +67,8 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private List<String> selectedMicrocontrollers = new ArrayList<String>();
     private List<Sequence> selectedSequences = new ArrayList<Sequence>();
     private RadioGroup radioStorageGroup;
+    private EditText streamBufferSizeInput;
+    private Spinner memoryUnitSpinner;
 
     public TestsSectionFragment() {
         this.layout = R.layout.tests;
@@ -222,19 +232,53 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }});
 
         saveLogsCheckBox = (CheckBox) rootView.findViewById(R.id.saveLogsCheckBox);
-        saveLogsCheckBox.setSelected(model.isSaveLogs());
+        saveLogsCheckBox.setChecked(model.isSaveLogs());
         saveLogsCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 model.setSaveLogs(isChecked);
             }});
         
+
+        streamBufferSizeInput = (EditText) rootView.findViewById(R.id.bufferSizeEditText);
+        streamBufferSizeInput.setText(String.valueOf(model.getStreamBufferSize()));
+        streamBufferSizeInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                String val = s.toString();
+                if(!val.isEmpty() && StringUtils.isNumeric(val)) {
+                    model.setRepeats(Integer.valueOf(s.toString()));
+                }
+            }
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }});
+
+        memoryUnitSpinner = (Spinner) rootView.findViewById(R.id.memoryUnitSpinner);
+        memoryUnitSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos,long id) {
+                model.setStreamBufferUnit(MemoryUnit.fromIndex(pos));
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                model.setStreamBufferUnit(MemoryUnit.B);
+            }
+        });
+
         saveStreamCheckBox = (CheckBox) rootView.findViewById(R.id.saveStreamDataCheckbox);
-        saveStreamCheckBox.setSelected(model.isSaveStreams());
+        saveStreamCheckBox.setChecked(model.isSaveStreams());
+        streamBufferSizeInput.setEnabled(saveStreamCheckBox.isChecked());
+        memoryUnitSpinner.setEnabled(saveStreamCheckBox.isChecked());
         saveStreamCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 model.setSaveStreams(isChecked);
+                streamBufferSizeInput.setEnabled(isChecked);
+                memoryUnitSpinner.setEnabled(isChecked);
             }});
         
         simulateEditText = (EditText) rootView.findViewById(R.id.simulateComputationsEditText);
@@ -253,7 +297,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
         });
 
         normalPriorityCheckBox = (CheckBox) rootView.findViewById(R.id.normalPriorityCheckbox);
-        normalPriorityCheckBox.setSelected(model.isNormalThreadPriority());
+        normalPriorityCheckBox.setChecked(model.isNormalThreadPriority());
         normalPriorityCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -261,7 +305,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }});
         
         hiPriorityAndroidCheckBox = (CheckBox) rootView.findViewById(R.id.hiAndroidPriorityCheckbox);
-        hiPriorityAndroidCheckBox.setSelected(model.isHiAndroidThreadPriority());
+        hiPriorityAndroidCheckBox.setChecked(model.isHiAndroidThreadPriority());
         hiPriorityAndroidCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -269,7 +313,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }});
         
         hiPriorityJavaCheckBox = (CheckBox) rootView.findViewById(R.id.hiJavaPriorityCheckbox);
-        hiPriorityJavaCheckBox.setSelected(model.isHiJavaThreadPriority());
+        hiPriorityJavaCheckBox.setChecked(model.isHiJavaThreadPriority());
         hiPriorityJavaCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -277,7 +321,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }});
         
         extendedDevicesCombination = (CheckBox) rootView.findViewById(R.id.extendedDevicesCheckBox);
-        extendedDevicesCombination.setSelected(model.isExtendedDevicesCombination());
+        extendedDevicesCombination.setChecked(model.isExtendedDevicesCombination());
         extendedDevicesCombination.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -285,7 +329,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }});
 
         fastHub = (CheckBox) rootView.findViewById(R.id.fastHubCheckBox);
-        fastHub.setSelected(model.isFastHub());
+        fastHub.setChecked(model.isFastHub());
         fastHub.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -293,7 +337,14 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }});
 
         radioStorageGroup = (RadioGroup) rootView.findViewById(R.id.storageRadioGroup);
-        
+        switch (model.getStorageType()) {
+        case EXTERNAL:
+            ((RadioButton)rootView.findViewById(R.id.externalStorageRadio)).setChecked(true);
+            break;
+        case INTERNAL:
+            ((RadioButton)rootView.findViewById(R.id.internalStorageRadio)).setChecked(true);
+            break;
+        }
         radioStorageGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
 
             @Override
@@ -373,6 +424,14 @@ public class TestsSectionFragment extends BaseSectionFragment {
     }
 
     private void createDeviceChooser(View rootView, final Button runButton) {
+
+        StableArrayAdapter adapter = new StableArrayAdapter(getActivity(), R.layout.text_view, selectedMicrocontrollers);
+        DynamicListView listView = (DynamicListView) rootView.findViewById(R.id.selectedDevicesDynamicList);
+
+        listView.setListItems(selectedMicrocontrollers);
+        listView.setAdapter(adapter);
+        listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
         deviceText = (TextView) rootView.findViewById(R.id.selectedDeviceText);
         StringBuilder builder = new StringBuilder();
         for (String item : selectedMicrocontrollers) {

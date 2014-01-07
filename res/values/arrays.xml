@@ -65,6 +65,10 @@
         <item>Async SRww_SRww</item>
         <item>Async Sw_Sw_Rw_Rw</item>
         <item>Async Sw_Rw_Sw_Rw</item>
+    </string-array><string-array name="memory_unit">
+        <item>Bytes</item>
+        <item>KiloBytes</item>
+        <item>MegaBytes</item>
     </string-array>
 
 </resources>

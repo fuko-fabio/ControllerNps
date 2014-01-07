@@ -69,6 +69,7 @@ public class ScenariosGenerator {
                 .withStreamOutSize(model.getStreamOutSize())
                 .withThreadPriority(priority)
                 .withDevices(devices)
+                .withStreamBufferSize(model.getStreamBufferSize() * model.getStreamBufferUnit().getMultiplier())
                 .withHub(model.isFastHub() ? Hub.FAST : Hub.NORMAL)
                 .isSaveSpeedLogs(model.isSaveLogs())
                 .isSaveStreamData(model.isSaveStreams())

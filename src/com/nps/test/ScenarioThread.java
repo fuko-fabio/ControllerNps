@@ -27,9 +27,9 @@ public class ScenarioThread extends Thread {
     private final Microcontroller[] microcontrollers;
 
     private static final int STREAM_QUEUE_SIZE = 10;
-    private static final int STREAM_BUFFER_RANGE = 8388608; // 8mb
+    //private static final int STREAM_BUFFER_RANGE = 8388608; // 8mb
     //private static final int STREAM_BUFFER_RANGE = 512000; // 500kb
-    private static final int STREAM_BUFFER_SIZE = STREAM_BUFFER_RANGE * 3;
+    private final int streamBufferSize;
     private BlockingQueue<byte[]> streamQueue;
     private ByteBuffer streamBuffer;
     private StreamWriterThread streamWriterThread;
@@ -43,14 +43,14 @@ public class ScenarioThread extends Thread {
         this.microcontrollers = microcontrollers;
         this.scenario = scenario;
         this.externalStorage = externalStorage;
-
+        this.streamBufferSize = scenario.getStreamBufferSize();
         if(scenario.getThreadPriority() == ThreadPriority.JAVA_BASED_HIGH){
             this.setPriority(Thread.MAX_PRIORITY);
         }
 
         if(scenario.isSaveStreamData()) {
             streamQueue = new ArrayBlockingQueue<byte[]>(STREAM_QUEUE_SIZE);
-            streamBuffer = ByteBuffer.allocateDirect(STREAM_BUFFER_SIZE);
+            streamBuffer = ByteBuffer.allocateDirect(streamBufferSize *3);
         }
         if(scenario.getSimulateComputations() > 0) {
             for (int i = 0; i < FAKE_ARRAY_SIZE; i++) {
@@ -427,12 +427,12 @@ public class ScenarioThread extends Thread {
     private synchronized void writeStreamToQueue(byte[] lastSentStreamPacket, byte[] lastReceivedStreamPacket) {
         streamBuffer.put(lastSentStreamPacket);
         streamBuffer.put(lastReceivedStreamPacket);
-        if(streamBuffer.position() >= STREAM_BUFFER_RANGE) {
-            byte[] streamToSave = new byte[STREAM_BUFFER_RANGE];
+        if(streamBuffer.position() >= streamBufferSize) {
+            byte[] streamToSave = new byte[streamBufferSize];
             try {
-                byte[] tmp = new byte[streamBuffer.position() - STREAM_BUFFER_RANGE];
+                byte[] tmp = new byte[streamBuffer.position() - streamBufferSize];
                 streamBuffer.rewind();
-                streamBuffer.get(streamToSave, 0, STREAM_BUFFER_RANGE);
+                streamBuffer.get(streamToSave, 0, streamBufferSize);
                 streamBuffer.get(tmp, 0, tmp.length);
                 streamBuffer.clear();
                 streamBuffer.put(tmp);
