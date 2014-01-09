@@ -2,8 +2,8 @@ package com.nps.architecture;
 
 public enum ThreadPriority {
     NORMAL("Normal", "N___"),
-    JAVA_BASED_HIGH("Java High", "N___"),
-    ANDROID_BASED_HIGH("Android High", "N___");
+    JAVA_BASED_HIGH("Java High", "J___"),
+    ANDROID_BASED_HIGH("Android High", "A___");
 
     private String descriptor;
     private String name;

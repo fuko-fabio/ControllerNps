@@ -1,6 +1,9 @@
 package com.nps.test;
 
 import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -119,15 +122,23 @@ public class ScenarioThread extends Thread {
 
     private void switchMicrocontrollersToStreamMode(Microcontroller[] selectedMicrocontrollers,
             short streamOutSize, short streamInSize) throws MicrocontrollerException {
-        for (Microcontroller micro : selectedMicrocontrollers) {
+        for (Microcontroller micro : getUniqueMicrocontrollers(selectedMicrocontrollers)) {
             micro.setStreamParameters(streamOutSize, streamInSize);
             micro.switchToStreamMode();
         }
     }
 
+    private Collection<Microcontroller> getUniqueMicrocontrollers(Microcontroller[] microcontrollers) {
+        Map<String, Microcontroller> map = new HashMap<String, Microcontroller>();
+        for(Microcontroller microcontroller : microcontrollers) {
+            map.put(microcontroller.getDeviceName(), microcontroller);
+        }
+        return map.values();
+    }
+
     private void switchMicrocontrollersToCommandMode(Microcontroller[] selectedMicrocontrollers)
             throws MicrocontrollerException {
-        for (Microcontroller micro : selectedMicrocontrollers) {
+        for (Microcontroller micro : getUniqueMicrocontrollers(selectedMicrocontrollers)) {
             micro.switchToCommandMode();
         }
     }

@@ -73,13 +73,14 @@ public class ExternalStorage {
     }
     
     private String baseFilename() {
-        return '_' + scenario.getStreamOutSize() + '_' + scenario.getStreamInSize() + "_x" + scenario.getRepeats() + "_d" + scenario.getDevices().length;
+        return "_" + scenario.getStreamOutSize() + "_" + scenario.getStreamInSize() +
+               "_x" + scenario.getRepeats() + "_d" + scenario.getDevices().length;
     }
     
     private String testDirName() {
         return testDate + File.separator + scenario.getSequence().group().descriptor() +
-        'D' + scenario.getDevices().length + '_' + scenario.getHub().descriptor() +
-        scenario.getSequence().descriptor() + scenario.getThreadPriority().descriptor() + 'C' +
+        "D" + scenario.getDevices().length + "_" + scenario.getHub().descriptor() +
+        scenario.getSequence().descriptor() + scenario.getThreadPriority().descriptor() + "C" +
         scenario.getSimulateComputations() + "__" + File.separator;
     }
 }

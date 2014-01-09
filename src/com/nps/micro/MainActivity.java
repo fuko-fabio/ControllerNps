@@ -32,6 +32,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.WindowManager;
 
+import com.nps.micro.UsbService.Status;
 import com.nps.micro.view.Dialogs;
 import com.nps.micro.view.GraphSectionFragment;
 import com.nps.micro.view.HomeSectionFragment;
@@ -125,6 +126,9 @@ public class MainActivity extends FragmentActivity {
                 Message msg = Message.obtain(null, UsbService.MSG_REGISTER_CLIENT);
                 msg.replyTo = messenger;
                 messengerService.send(msg);
+                
+                Status status = microUsbService.getStatus();
+                mSectionsPagerAdapter.updateStatus(status.getText(), status.isBusy());
             } catch (RemoteException e) {
                 // In this case the service has crashed before we could even do
                 // anything with it
@@ -148,7 +152,7 @@ public class MainActivity extends FragmentActivity {
             switch (msg.what) {
             case UsbService.MSG_STATUS:
                 Bundle b = msg.getData();
-                mSectionsPagerAdapter.updateStatus(b.getString(UsbService.MSG_STATUS_CONTENT));
+                mSectionsPagerAdapter.updateStatus(b.getString(UsbService.MSG_STATUS_CONTENT), b.getBoolean(UsbService.MSG_STATUS_BUSY));
                 break;
             default:
                 super.handleMessage(msg);
@@ -383,14 +387,21 @@ public class MainActivity extends FragmentActivity {
                         microUsbService.testCommunication(scenarios);
                     }
                 }
+
+                @Override
+                public void onPingDevice(String deviceName) {
+                    if (microUsbService != null) {
+                        microUsbService.pingDevice(deviceName);
+                    }
+                }
             });
             graphFragment = new GraphSectionFragment();
             homeFragment = new HomeSectionFragment();
             fragments = new Fragment[] { testsFragment, homeFragment, graphFragment };
         }
 
-        public void updateStatus(String status) {
-            testsFragment.setStatus(status);
+        public void updateStatus(String status, boolean busy) {
+            testsFragment.setStatus(status, busy);
         }
 
         @Override

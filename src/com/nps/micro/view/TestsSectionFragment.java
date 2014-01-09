@@ -1,27 +1,32 @@
 package com.nps.micro.view;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DynamicListView;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -30,7 +35,6 @@ import android.widget.StableArrayAdapter;
 import android.widget.TextView;
 
 import com.nps.architecture.MemoryUnit;
-import com.nps.architecture.Sequence;
 import com.nps.micro.R;
 import com.nps.micro.model.TestsViewModel;
 import com.nps.storage.Storage;
@@ -43,32 +47,44 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private final TestsViewModel model = new TestsViewModel();
 
     private TextView status;
-    private Button runButton;
+
     private EditText repeatsInput;
     private Button repeatsButton;
     private EditText outSizeInput;
     private Button outSizeButton;
     private EditText inSizeInput;
     private Button inSizeButton;
+
     private CheckBox normalPriorityCheckBox;
     private CheckBox hiPriorityJavaCheckBox;
     private CheckBox hiPriorityAndroidCheckBox;
+
+    private StableArrayAdapter selectedSequencesAdapter;
+    private DynamicListView selectedSequencesListView;
+    private Button selectSequenceButton;
+
+    private ArrayAdapter<String> availableDevicesAdapter;
+    private ListView availableDevicesListView;
+    private StableArrayAdapter selectedDevicesAdapter;
+    private DynamicListView selectedDevicesListView;
+    private CheckBox extendedDevicesCombination;
+
     private CheckBox saveLogsCheckBox;
     private CheckBox saveStreamCheckBox;
-    private EditText simulateEditText;
-    private CheckBox extendedDevicesCombination;
-    private CheckBox fastHub;
-    private String[] sequencesArray;
-    private TextView sequenceText;
-    private Button arhitectureButton;
-    private TextView deviceText;
-    private Button deviceButton;
-    private List<String> availableMicrocontrollers  = new ArrayList<String>();
-    private List<String> selectedMicrocontrollers = new ArrayList<String>();
-    private List<Sequence> selectedSequences = new ArrayList<Sequence>();
     private RadioGroup radioStorageGroup;
+    private RadioButton externalStorageRadio;
+    private RadioButton internalStorageRadio;
     private EditText streamBufferSizeInput;
     private Spinner memoryUnitSpinner;
+
+    private EditText simulateEditText;
+    private CheckBox fastHub;
+
+    private Button runButton;
+
+    private final List<String> selectedDevices = new ArrayList<String>();
+    private final List<String> selectedSequences = new ArrayList<String>();
+
 
     public TestsSectionFragment() {
         this.layout = R.layout.tests;
@@ -91,8 +107,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                // TODO Auto-generated method stub
-
+                                // Do nothing
                             }
                         })
                 .setPositiveButton(R.string.run, new DialogInterface.OnClickListener() {
@@ -231,12 +246,44 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 alert.show();
             }});
 
+        radioStorageGroup = (RadioGroup) rootView.findViewById(R.id.storageRadioGroup);
+        externalStorageRadio = (RadioButton) rootView.findViewById(R.id.externalStorageRadio);
+        internalStorageRadio = (RadioButton) rootView.findViewById(R.id.internalStorageRadio);
+        switch (model.getStorageType()) {
+        case EXTERNAL:
+            externalStorageRadio.setChecked(true);
+            break;
+        case INTERNAL:
+            internalStorageRadio.setChecked(true);
+            break;
+        }
+        externalStorageRadio.setEnabled(model.isSaveStreams() || model.isSaveLogs());
+        internalStorageRadio.setEnabled(model.isSaveStreams() || model.isSaveLogs());
+        
+        radioStorageGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                case R.id.internalStorageRadio:
+                    model.setStorageType(Storage.Type.INTERNAL);
+                    break;
+                case R.id.externalStorageRadio:
+                    model.setStorageType(Storage.Type.EXTERNAL);
+                    break;
+                }
+            }
+        });
+
         saveLogsCheckBox = (CheckBox) rootView.findViewById(R.id.saveLogsCheckBox);
         saveLogsCheckBox.setChecked(model.isSaveLogs());
         saveLogsCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 model.setSaveLogs(isChecked);
+                externalStorageRadio.setEnabled(model.isSaveStreams() || model.isSaveLogs());
+                internalStorageRadio.setEnabled(model.isSaveStreams() || model.isSaveLogs());
+                
             }});
         
 
@@ -258,6 +305,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }});
 
         memoryUnitSpinner = (Spinner) rootView.findViewById(R.id.memoryUnitSpinner);
+        memoryUnitSpinner.setSelection(1);
         memoryUnitSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int pos,long id) {
@@ -265,7 +313,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                model.setStreamBufferUnit(MemoryUnit.B);
+                // do nothing
             }
         });
 
@@ -277,6 +325,8 @@ public class TestsSectionFragment extends BaseSectionFragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 model.setSaveStreams(isChecked);
+                externalStorageRadio.setEnabled(model.isSaveStreams() || model.isSaveLogs());
+                internalStorageRadio.setEnabled(model.isSaveStreams() || model.isSaveLogs());
                 streamBufferSizeInput.setEnabled(isChecked);
                 memoryUnitSpinner.setEnabled(isChecked);
             }});
@@ -336,53 +386,68 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 model.setFastHub(isChecked);
             }});
 
-        radioStorageGroup = (RadioGroup) rootView.findViewById(R.id.storageRadioGroup);
-        switch (model.getStorageType()) {
-        case EXTERNAL:
-            ((RadioButton)rootView.findViewById(R.id.externalStorageRadio)).setChecked(true);
-            break;
-        case INTERNAL:
-            ((RadioButton)rootView.findViewById(R.id.internalStorageRadio)).setChecked(true);
-            break;
-        }
-        radioStorageGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                switch (checkedId) {
-                case R.id.internalStorageRadio:
-                    model.setStorageType(Storage.Type.INTERNAL);
-                    break;
-                case R.id.externalStorageRadio:
-                    model.setStorageType(Storage.Type.EXTERNAL);
-                    break;
-                }
-            }
-        });
-
         createSequenceChooser(rootView);
         createDeviceChooser(rootView, runButton);
+        //setAvailableMicrocontrollers(Arrays.asList("/dev/0/", "/dev/1/", "/dev/2/", "/dev/4/"));
         return rootView;
     }
 
-    private void createSequenceChooser(View rootView) {
-        sequencesArray = getResources().getStringArray(R.array.sequence_array);
-        selectedSequences.addAll(Arrays.asList(model.getSequences()));
-        sequenceText = (TextView) rootView.findViewById(R.id.selectedSequenceText);
-        StringBuilder builder = new StringBuilder();
-        for (Sequence item : selectedSequences) {
-            builder.append(item.toString()).append('\n');
+    public static void setListViewHeightBasedOnChildren(ListView listView) {
+        ListAdapter listAdapter = listView.getAdapter(); 
+        if (listAdapter == null) {
+            // pre-condition
+            return;
         }
-        sequenceText.setText(builder.toString());
-        runButton.setEnabled(true);
-        sequenceText.setText(builder.toString());
-        arhitectureButton = (Button) rootView.findViewById(R.id.selectSequenceButton);
-        arhitectureButton.setOnClickListener(new OnClickListener() {
+
+        int totalHeight = 1;
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            View listItem = listAdapter.getView(i, null, listView);
+            listItem.measure(0, 0);
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        listView.setLayoutParams(params);
+        listView.requestLayout();
+    }  
+
+    private void createSequenceChooser(View rootView) {
+        final String[] sequencesArray = getResources().getStringArray(R.array.sequence_array);
+        selectedSequences.addAll(model.getSequencesAsStrings());
+        runButton.setEnabled(model.getSequences().length > 0);
+        selectedSequencesListView = (DynamicListView) rootView.findViewById(R.id.selectedSequencesListView);
+        selectedSequencesListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        selectedSequencesAdapter = new StableArrayAdapter(getActivity(), R.layout.text_view, selectedSequences);
+        selectedSequencesListView.setListItems(selectedSequences);
+        selectedSequencesListView.setAdapter(selectedSequencesAdapter);
+        setListViewHeightBasedOnChildren(selectedSequencesListView);
+        selectedSequencesListView.setOnTouchListener(new ListView.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                int action = event.getAction();
+                switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                    v.getParent().requestDisallowInterceptTouchEvent(false);
+                    break;
+                }
+
+                v.onTouchEvent(event);
+                return true;
+            }
+        });
+
+        selectSequenceButton = (Button) rootView.findViewById(R.id.selectSequenceButton);
+        selectSequenceButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 boolean[] checkedItems = new boolean[sequencesArray.length];
                 for(int i = 0; i < sequencesArray.length; i++){
-                    if(selectedSequences.contains(Sequence.fromString(sequencesArray[i]))) {
+                    if(selectedSequences.contains(sequencesArray[i])) {
                         checkedItems[i] = true;
                     } else {
                         checkedItems[i] = false;
@@ -394,7 +459,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
                                 new DialogInterface.OnMultiChoiceClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                                        Sequence selectedArchitecture = Sequence.fromString(sequencesArray[which]);
+                                        String selectedArchitecture = sequencesArray[which];
                                         if (isChecked) {
                                             selectedSequences.add(selectedArchitecture);
                                         } else if (selectedSequences.contains(selectedArchitecture)) {
@@ -405,18 +470,11 @@ public class TestsSectionFragment extends BaseSectionFragment {
                         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
-                                if (selectedSequences.isEmpty()) {
-                                    sequenceText.setText(getResources().getString(R.string.none));
-                                    runButton.setEnabled(false);
-                                } else {
-                                    StringBuilder builder = new StringBuilder();
-                                    for (Sequence item : selectedSequences) {
-                                        builder.append(item.toString()).append('\n');
-                                    }
-                                    sequenceText.setText(builder.toString());
-                                    runButton.setEnabled(true);
-                                }
-                                model.setSequences(selectedSequences.toArray(new Sequence[selectedSequences.size()]));
+                                runButton.setEnabled(!selectedSequences.isEmpty());
+                                model.setSequences(selectedSequences);
+                                selectedSequencesAdapter = new StableArrayAdapter(getActivity(), R.layout.text_view, selectedSequences);
+                                selectedSequencesListView.setAdapter(selectedSequencesAdapter);
+                                setListViewHeightBasedOnChildren(selectedSequencesListView);
                             }
                         }).create().show();
             }
@@ -424,85 +482,122 @@ public class TestsSectionFragment extends BaseSectionFragment {
     }
 
     private void createDeviceChooser(View rootView, final Button runButton) {
-
-        StableArrayAdapter adapter = new StableArrayAdapter(getActivity(), R.layout.text_view, selectedMicrocontrollers);
-        DynamicListView listView = (DynamicListView) rootView.findViewById(R.id.selectedDevicesDynamicList);
-
-        listView.setListItems(selectedMicrocontrollers);
-        listView.setAdapter(adapter);
-        listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-
-        deviceText = (TextView) rootView.findViewById(R.id.selectedDeviceText);
-        StringBuilder builder = new StringBuilder();
-        for (String item : selectedMicrocontrollers) {
-            builder.append(item).append('\n');
-        }
-        deviceText.setText(builder.toString());
-        deviceButton = (Button) rootView.findViewById(R.id.selectDeviceButton);
-        deviceButton.setOnClickListener(new OnClickListener(){
+        availableDevicesListView = (ListView) rootView.findViewById(R.id.availableDevicesListView);
+        availableDevicesListView.setOnItemClickListener(new OnItemClickListener() {
             @Override
-            public void onClick(View v) {
-                boolean[] checkedItems = new boolean[availableMicrocontrollers.size()];
-                for(int i = 0; i < availableMicrocontrollers.size(); i++){
-                    if(selectedMicrocontrollers.contains(availableMicrocontrollers.get(i))) {
-                        checkedItems[i] = true;
-                    } else {
-                        checkedItems[i] = false;
-                    }
+            public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
+                String item = (String) parent.getItemAtPosition(position);
+                selectedDevices.add(ensureUniqueItem(item));
+                selectedDevicesAdapter = new StableArrayAdapter(getActivity(), R.layout.text_view, selectedDevices);
+                selectedDevicesListView.setAdapter(selectedDevicesAdapter);
+                setListViewHeightBasedOnChildren(selectedDevicesListView);
+                updateModelSelectedDevices();
+            }
+
+            private String ensureUniqueItem(String item) {
+                if(selectedDevices.contains(item)){
+                    return ensureUniqueItem(item + "'");
+                } else {
+                    return item;
                 }
-                new AlertDialog.Builder(getActivity())
-                        .setTitle(R.string.device)
-                        .setMultiChoiceItems(availableMicrocontrollers.toArray(new String[availableMicrocontrollers.size()]), checkedItems,
-                                new DialogInterface.OnMultiChoiceClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                                        String item = availableMicrocontrollers.get(which);
-                                        if (isChecked) {
-                                            selectedMicrocontrollers.add(item);
-                                        } else if (selectedMicrocontrollers.contains(item)) {
-                                            selectedMicrocontrollers.remove(item);
-                                        }
-                                    }
-                                })
-                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
+            }
+        });
+        availableDevicesListView.setOnItemLongClickListener( new OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, final View view, int position, long id) {
+                view.setBackgroundColor(Color.CYAN);
+                final String item = (String) parent.getItemAtPosition(position);
+                final String msg = getResources().getString(R.string.ping_device_info);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle(R.string.ping_device_title)
+                        .setMessage(String.format(msg, item))
+                        .setPositiveButton(R.string.ping, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                if (selectedMicrocontrollers.isEmpty()) {
-                                    deviceText.setText(getResources().getString(R.string.none));
-                                    runButton.setEnabled(false);
-                                } else {
-                                    StringBuilder builder = new StringBuilder();
-                                    for (String item : selectedMicrocontrollers) {
-                                        builder.append(item).append('\n');
-                                    }
-                                    deviceText.setText(builder.toString());
-                                    runButton.setEnabled(true);
+                                view.setBackgroundColor(Color.BLACK);
+                                if (listener != null) {
+                                    listener.onPingDevice(item);
                                 }
-                                model.setDevices(selectedMicrocontrollers.toArray(new String[selectedMicrocontrollers.size()]));
+                                dialog.dismiss();
                             }
-                        }).create().show();
-            }});
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                view.setBackgroundColor(Color.BLACK);
+                                dialog.dismiss();
+                            }
+                        });
+                builder.create().show();
+                return true;
+            }
+        });
+
+        selectedDevicesListView = (DynamicListView) rootView.findViewById(R.id.selectedDevicesListView);
+        selectedDevicesListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        selectedDevicesListView.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
+                final String item = (String) parent.getItemAtPosition(position);
+                selectedDevices.remove(item);
+                selectedDevicesAdapter = new StableArrayAdapter(getActivity(), R.layout.text_view, selectedDevices);
+                selectedDevicesListView.setAdapter(selectedDevicesAdapter);
+                setListViewHeightBasedOnChildren(selectedDevicesListView);
+                updateModelSelectedDevices();
+            }
+        });
+        selectedDevicesListView.setOnTouchListener(new ListView.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                int action = event.getAction();
+                switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    break;
+                case MotionEvent.ACTION_UP:
+                    v.getParent().requestDisallowInterceptTouchEvent(false);
+                    break;
+                }
+                v.onTouchEvent(event);
+                return true;
+            }
+        });
+    }
+
+    private void updateModelSelectedDevices() {
+        List<String> selected = new ArrayList<String>();
+        for (String name : selectedDevices) {
+            selected.add(name.replaceAll("'", ""));
+        }
+        model.setDevices(selected.toArray(new String[selected.size()]));
+        runButton.setEnabled(selectedDevices.size() != 0);
+        extendedDevicesCombination.setEnabled(selectedDevices.size() > 1);
     }
 
     public void setAvailableMicrocontrollers(List<String> availableMicrocontrollers) {
-        this.availableMicrocontrollers = availableMicrocontrollers;
-        model.setDevices(availableMicrocontrollers.toArray(new String[availableMicrocontrollers.size()]));
-        StringBuilder builder = new StringBuilder();
-        for (String item : availableMicrocontrollers) {
-            builder.append(item).append('\n');
+        availableDevicesAdapter = new ArrayAdapter<String>(getActivity(), R.layout.text_view, availableMicrocontrollers);
+        availableDevicesListView.setAdapter(availableDevicesAdapter);
+        availableDevicesListView.setTextFilterEnabled(true);
+        setListViewHeightBasedOnChildren(availableDevicesListView);
+
+        if (selectedDevices.isEmpty() ) {
+            selectedDevices.addAll(availableMicrocontrollers);
+            updateModelSelectedDevices();
         }
-        deviceText.setText(builder.toString());
-        if (availableMicrocontrollers.isEmpty()) {
-            runButton.setEnabled(true);
-        }
-        if(selectedMicrocontrollers.isEmpty()) {
-            selectedMicrocontrollers.addAll(this.availableMicrocontrollers);
-        }
+
+        selectedDevicesAdapter = new StableArrayAdapter(getActivity(), R.layout.text_view, selectedDevices);
+        selectedDevicesListView.setListItems(selectedDevices);
+        selectedDevicesListView.setAdapter(selectedDevicesAdapter);
+        setListViewHeightBasedOnChildren(selectedDevicesListView);
     }
 
-    public void setStatus(String string) {
+    public void setStatus(String string, boolean busy) {
         if (status != null) {
             status.setText(string);
+        }
+        
+        if (busy) {
+            getView().findViewById(R.id.statusProgress).setVisibility(View.VISIBLE);
+        } else {
+            getView().findViewById(R.id.statusProgress).setVisibility(View.GONE);
         }
     }
 }

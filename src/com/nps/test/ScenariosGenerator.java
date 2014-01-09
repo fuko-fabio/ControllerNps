@@ -68,12 +68,19 @@ public class ScenariosGenerator {
                 .withStreamInSize(streamInSize)
                 .withStreamOutSize(model.getStreamOutSize())
                 .withThreadPriority(priority)
-                .withDevices(devices)
+                .withDevices(clearPostfixes(devices))
                 .withStreamBufferSize(model.getStreamBufferSize() * model.getStreamBufferUnit().getMultiplier())
                 .withHub(model.isFastHub() ? Hub.FAST : Hub.NORMAL)
                 .isSaveSpeedLogs(model.isSaveLogs())
                 .isSaveStreamData(model.isSaveStreams())
                 .withSimulateComputations(model.getSimulateComputations())
                 .withStorageType(model.getStorageType()).build();
+    }
+
+    private String[] clearPostfixes(String[] devices) {
+        for( String device : devices) {
+            device.replaceAll("'", "");
+        }
+        return devices;
     }
 }

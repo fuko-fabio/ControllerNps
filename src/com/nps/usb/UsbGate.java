@@ -28,6 +28,7 @@ public class UsbGate {
     private UsbManager mUsbManager;
     private UsbRequest sendUsbRequest;
     private UsbRequest receiveUsbRequest;
+    private boolean isAsyncInitialized;
 
     
     /**
@@ -70,6 +71,7 @@ public class UsbGate {
         mUsbDevice = device;
         sendUsbRequest = new UsbRequest();
         receiveUsbRequest = new UsbRequest();
+        isAsyncInitialized = false;
     }
 
     /**
@@ -172,12 +174,15 @@ public class UsbGate {
      * @throws IllegalAccessException if USB interface cannot be claimed or usb request cannot be initialized
      */
     public void initAsyncUsbRequests() throws IllegalAccessException {
-        if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
-            throw new IllegalAccessException("USB interface cannot be claimed ");
-        if (!sendUsbRequest.initialize(mUsbConnection, mUsbEndpointOut))
-            throw new IllegalAccessException("USB request cannot be opened");
-        if (!receiveUsbRequest.initialize(mUsbConnection, mUsbEndpointIn))
-            throw new IllegalAccessException("USB request cannot be opened");
+        if(!isAsyncInitialized) {
+            if (!mUsbConnection.claimInterface(mUsbInterface, forceClaim))
+                throw new IllegalAccessException("USB interface cannot be claimed ");
+            if (!sendUsbRequest.initialize(mUsbConnection, mUsbEndpointOut))
+                throw new IllegalAccessException("USB request cannot be opened");
+            if (!receiveUsbRequest.initialize(mUsbConnection, mUsbEndpointIn))
+                throw new IllegalAccessException("USB request cannot be opened");
+            isAsyncInitialized = true;
+        }
     }
 
     /**

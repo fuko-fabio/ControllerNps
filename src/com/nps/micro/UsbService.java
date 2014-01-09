@@ -1,11 +1,11 @@
 package com.nps.micro;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -32,14 +32,42 @@ import android.util.Log;
 import com.nps.storage.ExternalStorage;
 import com.nps.test.Scenario;
 import com.nps.test.ScenarioThread;
+import com.nps.test.StatusThread;
 import com.nps.usb.UsbGateException;
 import com.nps.usb.microcontroller.Microcontroller;
+import com.nps.usb.microcontroller.MicrocontrollerException;
 
 /**
  * @author Norbert Pabian
  * www.npsoftware.pl
  */
 public class UsbService extends Service {
+
+    public class Status {
+        private String text;
+        private boolean busy;
+
+        public Status(String text, boolean busy) {
+            this.text = text;
+            this.busy = busy;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
+
+        public boolean isBusy() {
+            return busy;
+        }
+
+        public void setBusy(boolean busy) {
+            this.busy = busy;
+        }
+    }
 
     private static final String TAG = "UsbService";
     
@@ -48,14 +76,14 @@ public class UsbService extends Service {
 
     private ExecutorService executorService;
     @SuppressWarnings("rawtypes")
-    private List<Future> futures = new ArrayList<Future>();
+    private final List<Future> futures = new ArrayList<Future>();
+    private StatusThread statusThread;
 
     private static boolean isRunning = false;
 
     private UsbManager usbManager;
     private List<UsbDevice> devices = new ArrayList<UsbDevice>();
-    private List<Microcontroller> availableMicrocontrollers = new ArrayList<Microcontroller>();
-    private List<String> microcontrollersNames = new ArrayList<String>();
+    private Map<String, Microcontroller> availableMicrocontrollers = new HashMap<String, Microcontroller>();
 
      // Keeps track of all current registered clients.
     static ArrayList<Messenger> mClients = new ArrayList<Messenger>();
@@ -66,6 +94,10 @@ public class UsbService extends Service {
     private static final String KILL_ACTION = "com.nps.micro.killService";
 
     static final String MSG_STATUS_CONTENT = "status";
+    static final String MSG_STATUS_BUSY = "statusBusy";
+
+    private Status status;
+
 
     // Target we publish for clients to send messages to IncomingHandler.
     private final Messenger mMessenger = new Messenger(new IncomingHandler());
@@ -99,8 +131,13 @@ public class UsbService extends Service {
         }
     }
 
+    @SuppressWarnings("rawtypes")
+    public List<Future> getFutures() {
+        return futures;
+    }
+
     public List<String> getAvailableMicrocontrollers() {
-        return microcontrollersNames;
+        return new ArrayList<String>(availableMicrocontrollers.keySet());
     }
 
     @Override
@@ -109,6 +146,7 @@ public class UsbService extends Service {
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
         executorService = Executors.newSingleThreadExecutor();
+        statusThread = new StatusThread(this);
         showNotification();
         isRunning = true;
     }
@@ -130,6 +168,7 @@ public class UsbService extends Service {
             }
         }
         initMicrocontrollers();
+        status = new Status(getString(R.string.ready), false);
         return START_STICKY;
     }
 
@@ -137,13 +176,14 @@ public class UsbService extends Service {
     public void onDestroy() {
         closeMicrocontrollers();
         notificationManager.cancel(NOTIFICATION);
+        statusThread.finalize();
         executorService.shutdown();
         isRunning = false;
     }
 
     private void closeMicrocontrollers() {
-        for( Microcontroller micro : availableMicrocontrollers) {
-            micro.closeConnection();
+        for( Entry<String, Microcontroller> entry : availableMicrocontrollers.entrySet()) {
+            entry.getValue().closeConnection();
         }
     }
 
@@ -170,11 +210,12 @@ public class UsbService extends Service {
      * Show a notification service is testing microcontrollers.
      */
     public void showTestRunningNotification(Scenario scenario) {
-        String contentText = getText(R.string.local_service_testing).toString() +
-                             ' ' + scenario.getSequence().toString() +
-                             ' ' + scenario.getThreadPriority().toString() +
-                             " packet In size: " + scenario.getStreamInSize() +
-                             " on " + scenario.getDevices().length + " devices";
+        status = new Status(getText(R.string.local_service_testing).toString() +
+                            ' ' + scenario.getSequence().toString() +
+                            ' ' + scenario.getThreadPriority().toString() +
+                            " packet In size: " + scenario.getStreamInSize() +
+                            " on " + scenario.getDevices().length + " devices",
+                            true);
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         
@@ -185,18 +226,18 @@ public class UsbService extends Service {
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                                             .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
                                             .setSmallIcon(R.drawable.ic_launcher)
-                                            .setContentText(contentText)
+                                            .setContentText(status.getText())
                                             .setContentTitle(getText(R.string.local_service_notification))
                                             .addAction(R.drawable.ic_launcher, getString(R.string.kill), pendingIntentKill).build();
 
         notificationManager.notify(NOTIFICATION, notification);
-        sendStatusMessage(contentText);
+        sendStatusMessage();
     }
 
     /**
      * Show a notification service is finished testing microcontrollers.
      */
-    private void showTestDoneNotification() {
+    public void showTestDoneNotification() {
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
@@ -205,7 +246,8 @@ public class UsbService extends Service {
                                             .setContentText(getText(R.string.local_service_test_done))
                                             .setContentTitle(getText(R.string.local_service_notification)).build();
         notificationManager.notify(NOTIFICATION, notification);
-        sendStatusMessage(getString(R.string.ready));
+        status = new Status(getString(R.string.ready), false);
+        sendStatusMessage();
     }
 
     private void initMicrocontrollers() {
@@ -213,8 +255,7 @@ public class UsbService extends Service {
             Microcontroller micro;
             try {
                 micro = new Microcontroller(usbManager, devices.get(i));
-                availableMicrocontrollers.add(micro);
-                microcontrollersNames.add(micro.getDeviceName());
+                availableMicrocontrollers.put(micro.getDeviceName(), micro);
             } catch (UsbGateException e) {
                 Log.e(TAG, "Cannot open USB connection cause: " + e.getMessage());
             } catch (IllegalArgumentException e) {
@@ -226,44 +267,18 @@ public class UsbService extends Service {
             this.stopSelf();
         }
     }
-    
+
     public void testCommunication(List<Scenario> scenarios) {
-        for(Scenario scenario : scenarios) {
-            testScenarioThread(scenario);
+        if(!scenarios.isEmpty()){
+            for(Scenario scenario : scenarios) {
+                testScenarioThread(scenario);
+            }
+            if(statusThread.isAlive()){
+                statusThread.wakeUp();
+            } else {
+                statusThread.start();
+            }
         }
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(!emptyFutures()) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
-                    }
-                }
-                Log.d(TAG, "All threads done");
-                showTestDoneNotification();
-            }
-            private boolean emptyFutures() {
-                @SuppressWarnings("rawtypes")
-                List<Future> toRemove = new ArrayList<Future>();
-                for( @SuppressWarnings("rawtypes") Future future : futures) {
-                    try {
-                        if(future.get() == null ) {
-                            toRemove.add(future);
-                        }
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
-                    } catch (ExecutionException e) {
-                        Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
-                    }
-                }
-                futures.removeAll(toRemove);
-                Log.d(TAG, "Scenarios to end: " + futures.size());
-                return futures.isEmpty();
-            }
-        });
-        thread.start();
     }
 
     private void testScenarioThread(final Scenario scenario) {
@@ -275,14 +290,11 @@ public class UsbService extends Service {
     }
 
     private Microcontroller[] getSelectedMicrocontrollersForScenario(Scenario scenario) {
-        List<String> selectedDevices = Arrays.asList(scenario.getDevices());
-        Microcontroller[] selectedMicrocontrollers = new Microcontroller[selectedDevices.size()];
+        Microcontroller[] selectedMicrocontrollers = new Microcontroller[scenario.getDevices().length];
         int index = 0;
-        for (Microcontroller microcontroller : availableMicrocontrollers) {
-            if (selectedDevices.contains(microcontroller.getDeviceName())) {
-                selectedMicrocontrollers[index] = microcontroller;
-                index++;
-            }
+        for ( String deviceName : scenario.getDevices()) {
+            selectedMicrocontrollers[index] = availableMicrocontrollers.get(deviceName);
+            index++;
         }
         return selectedMicrocontrollers;
     }
@@ -303,11 +315,12 @@ public class UsbService extends Service {
         }
     }
 
-    private void sendStatusMessage(String status) {
+    private void sendStatusMessage() {
         for (int i = mClients.size() - 1; i >= 0; i--) {
             try {
                 Bundle b = new Bundle();
-                b.putString(MSG_STATUS_CONTENT, status);
+                b.putString(MSG_STATUS_CONTENT, status.getText());
+                b.putBoolean(MSG_STATUS_BUSY, status.isBusy());
                 Message message = Message.obtain(null, MSG_STATUS);
                 message.setData(b);
                 mClients.get(i).send(message);
@@ -320,8 +333,25 @@ public class UsbService extends Service {
             }
         }
     }
+    
+    public Status getStatus() {
+        return this.status;
+    }
 
     public static boolean isRunning() {
         return isRunning;
+    }
+
+    public void pingDevice(String deviceName) {
+        Microcontroller micro = availableMicrocontrollers.get(deviceName);
+        if(micro != null) {
+            try {
+                micro.getStreamParameters();
+            } catch (MicrocontrollerException e) {
+                Log.e(TAG, "Couldn't ping device: " + deviceName + " cause: " + e.getMessage());
+            }
+        } else {
+            Log.w(TAG, "Couldn't ping device: " + deviceName + " Device not exists.");
+        }
     }
 }

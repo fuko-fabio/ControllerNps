@@ -8,4 +8,6 @@ public interface TestsFragmentListener {
 
     public void onRunUsbTest(List<Scenario> scenarios);
 
+    public void onPingDevice(String deviceName);
+
 }

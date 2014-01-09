@@ -1,5 +1,8 @@
 package com.nps.micro.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.nps.architecture.MemoryUnit;
 import com.nps.architecture.Sequence;
 import com.nps.storage.Storage;
@@ -31,7 +34,7 @@ public class TestsViewModel {
         repeats = 10;
         streamOutSize = 16;
         streamInSize = new short[] { 48 };
-        devices = null;
+        devices = new String[]{};
         sequences = new Sequence[] {Sequence.SSRR_wwww};
         normalThreadPriority = false;
         hiJavaThreadPriority = false;
@@ -122,8 +125,24 @@ public class TestsViewModel {
         return sequences;
     }
 
+    public List<String> getSequencesAsStrings() {
+        List<String> sequencesStrings = new ArrayList<String>();
+        for (Sequence sequence : sequences) {
+            sequencesStrings.add(sequence.toString());
+        }
+        return sequencesStrings;
+    }
+
     public void setSequences(Sequence[] sequences) {
         this.sequences = sequences;
+    }
+
+    public void setSequences(List<String> sequences) {
+        List<Sequence> sequencesObjects = new ArrayList<Sequence>();
+        for (String sequence : sequences) {
+            sequencesObjects.add(Sequence.fromString(sequence));
+        }
+        this.sequences = sequencesObjects.toArray(new Sequence[sequencesObjects.size()]);
     }
 
     public boolean isNormalThreadPriority() {
