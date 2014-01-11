@@ -1,4 +1,6 @@
-package com.nps.usb.microcontroller;
+package com.nps.usb.packet;
+
+import com.nps.usb.microcontroller.Command;
 
 /**
  * @author Norbert Pabian
@@ -10,18 +12,18 @@ public class PacketBuilder {
 	short size;
 	byte[] packetData;
 	
-	PacketBuilder (short packetSize){
+	public PacketBuilder (short packetSize){
 		super();
 		this.size= packetSize;
 		this.packetData = new byte[this.size];
 	}
 
-	PacketBuilder withCommand(Command command) {
+	public PacketBuilder withCommand(Command command) {
 		this.command = command;
 		return this;
 	}
 
-	PacketBuilder withByte(int position, byte data) {
+	public PacketBuilder withByte(int position, byte data) {
 		this.packetData[position] = data;
 		return this;
 	}
@@ -31,7 +33,7 @@ public class PacketBuilder {
 		return this;
 	}
 
-	Packet build() {
+	public Packet build() {
 		return new Packet(command, size, packetData);
 	}
 

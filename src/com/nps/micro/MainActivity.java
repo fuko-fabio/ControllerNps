@@ -33,9 +33,11 @@ import android.view.Menu;
 import android.view.WindowManager;
 
 import com.nps.micro.UsbService.Status;
+import com.nps.micro.view.AboutSectionFragment;
+import com.nps.micro.view.BaseSectionFragment;
 import com.nps.micro.view.Dialogs;
+import com.nps.micro.view.GraphFragmentListener;
 import com.nps.micro.view.GraphSectionFragment;
-import com.nps.micro.view.HomeSectionFragment;
 import com.nps.micro.view.TestsFragmentListener;
 import com.nps.micro.view.TestsSectionFragment;
 import com.nps.test.Scenario;
@@ -120,7 +122,7 @@ public class MainActivity extends FragmentActivity {
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
             microUsbService = ((UsbService.LocalBinder) service).getService();
-            mSectionsPagerAdapter.updateAvailabeMicrocontrollers(microUsbService.getAvailableMicrocontrollers());
+            mSectionsPagerAdapter.updateAvailabeDevices(microUsbService.getAvailableMicrocontrollers());
             messengerService = new Messenger(((UsbService.LocalBinder) service).getMessenger());
             try {
                 Message msg = Message.obtain(null, UsbService.MSG_REGISTER_CLIENT);
@@ -241,7 +243,7 @@ public class MainActivity extends FragmentActivity {
             requestPermisionForDevice();
         } else {
             Log.d(TAG, "Cannot find target USB device");
-            Dialogs.getUsbDeviceNotFoundDialog(this).show();
+            //Dialogs.getUsbDeviceNotFoundDialog(this).show();
         }
     }
 
@@ -367,14 +369,14 @@ public class MainActivity extends FragmentActivity {
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        private Fragment[] fragments;
+        private BaseSectionFragment[] fragments;
 
         private CharSequence[] titles = new CharSequence[] { getString(R.string.title_tests),
-                getString(R.string.title_home), getString(R.string.title_graph) };
+                getString(R.string.title_graph), getString(R.string.title_about) };
 
         private TestsSectionFragment testsFragment;
-        private HomeSectionFragment homeFragment;
         private GraphSectionFragment graphFragment;
+        private AboutSectionFragment aboutFragment;
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -396,12 +398,23 @@ public class MainActivity extends FragmentActivity {
                 }
             });
             graphFragment = new GraphSectionFragment();
-            homeFragment = new HomeSectionFragment();
-            fragments = new Fragment[] { testsFragment, homeFragment, graphFragment };
+            graphFragment.setOnGraphFragmentListener(new GraphFragmentListener() {
+                @Override
+                public byte[] getLastReceivedPacket(String deviceName) {
+                    if (microUsbService != null) {
+                        return microUsbService.getLastReceivedPacket(deviceName);
+                    }
+                    return null;
+                }
+            });
+            aboutFragment = new AboutSectionFragment();
+            fragments = new BaseSectionFragment[] { testsFragment, graphFragment, aboutFragment };
         }
 
         public void updateStatus(String status, boolean busy) {
-            testsFragment.setStatus(status, busy);
+            for (BaseSectionFragment fragment : fragments) {
+                fragment.updateStatus(status, busy);
+            }
         }
 
         @Override
@@ -419,8 +432,9 @@ public class MainActivity extends FragmentActivity {
             return titles[position];
         }
 
-        public void updateAvailabeMicrocontrollers(List<String> microcontrollers) {
-            testsFragment.setAvailableMicrocontrollers(microcontrollers);
+        public void updateAvailabeDevices(List<String> devices) {
+            testsFragment.setAvailableDevices(devices);
+            graphFragment.setAvailableDevices(devices);
         }
     }
 }

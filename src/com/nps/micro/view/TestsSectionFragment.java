@@ -32,7 +32,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.StableArrayAdapter;
-import android.widget.TextView;
 
 import com.nps.architecture.MemoryUnit;
 import com.nps.micro.R;
@@ -45,8 +44,6 @@ public class TestsSectionFragment extends BaseSectionFragment {
 
     private TestsFragmentListener listener;
     private final TestsViewModel model = new TestsViewModel();
-
-    private TextView status;
 
     private EditText repeatsInput;
     private Button repeatsButton;
@@ -82,6 +79,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
 
     private Button runButton;
 
+    private List<String> devicesList = new ArrayList<String>();
     private final List<String> selectedDevices = new ArrayList<String>();
     private final List<String> selectedSequences = new ArrayList<String>();
 
@@ -129,8 +127,6 @@ public class TestsSectionFragment extends BaseSectionFragment {
     protected View buildRootView(LayoutInflater inflater, ViewGroup container) {
         View rootView = inflater.inflate(layout, container, false);
 
-        status = (TextView) rootView.findViewById(R.id.statusText);
-        
         runButton = (Button) rootView.findViewById(R.id.runButton);
         runButton.setOnClickListener(new OnClickListener(){
             @Override
@@ -294,7 +290,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             public void afterTextChanged(Editable s) {
                 String val = s.toString();
                 if(!val.isEmpty() && StringUtils.isNumeric(val)) {
-                    model.setRepeats(Integer.valueOf(s.toString()));
+                    model.setStreamBufferSize(Integer.valueOf(s.toString()));
                 }
             }
             @Override
@@ -305,7 +301,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             }});
 
         memoryUnitSpinner = (Spinner) rootView.findViewById(R.id.memoryUnitSpinner);
-        memoryUnitSpinner.setSelection(1);
+        memoryUnitSpinner.setSelection(model.getStreamBufferUnit().getIndex());
         memoryUnitSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int pos,long id) {
@@ -388,6 +384,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
 
         createSequenceChooser(rootView);
         createDeviceChooser(rootView, runButton);
+        updateStatus(rootView);
         //setAvailableMicrocontrollers(Arrays.asList("/dev/0/", "/dev/1/", "/dev/2/", "/dev/4/"));
         return rootView;
     }
@@ -414,6 +411,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
 
     private void createSequenceChooser(View rootView) {
         final String[] sequencesArray = getResources().getStringArray(R.array.sequence_array);
+        selectedSequences.clear();
         selectedSequences.addAll(model.getSequencesAsStrings());
         runButton.setEnabled(model.getSequences().length > 0);
         selectedSequencesListView = (DynamicListView) rootView.findViewById(R.id.selectedSequencesListView);
@@ -483,6 +481,9 @@ public class TestsSectionFragment extends BaseSectionFragment {
 
     private void createDeviceChooser(View rootView, final Button runButton) {
         availableDevicesListView = (ListView) rootView.findViewById(R.id.availableDevicesListView);
+        availableDevicesAdapter = new ArrayAdapter<String>(getActivity(), R.layout.text_view, devicesList);
+        availableDevicesListView.setAdapter(availableDevicesAdapter);
+        availableDevicesListView.setTextFilterEnabled(true);
         availableDevicesListView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
@@ -530,9 +531,13 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 return true;
             }
         });
+        setListViewHeightBasedOnChildren(availableDevicesListView);
 
         selectedDevicesListView = (DynamicListView) rootView.findViewById(R.id.selectedDevicesListView);
         selectedDevicesListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        selectedDevicesAdapter = new StableArrayAdapter(getActivity(), R.layout.text_view, selectedDevices);
+        selectedDevicesListView.setListItems(selectedDevices);
+        selectedDevicesListView.setAdapter(selectedDevicesAdapter);
         selectedDevicesListView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
@@ -560,6 +565,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 return true;
             }
         });
+        setListViewHeightBasedOnChildren(selectedDevicesListView);
     }
 
     private void updateModelSelectedDevices() {
@@ -572,14 +578,15 @@ public class TestsSectionFragment extends BaseSectionFragment {
         extendedDevicesCombination.setEnabled(selectedDevices.size() > 1);
     }
 
-    public void setAvailableMicrocontrollers(List<String> availableMicrocontrollers) {
-        availableDevicesAdapter = new ArrayAdapter<String>(getActivity(), R.layout.text_view, availableMicrocontrollers);
+    public void setAvailableDevices(List<String> availableDevices) {
+        this.devicesList = availableDevices;
+        availableDevicesAdapter = new ArrayAdapter<String>(getActivity(), R.layout.text_view, devicesList);
         availableDevicesListView.setAdapter(availableDevicesAdapter);
         availableDevicesListView.setTextFilterEnabled(true);
         setListViewHeightBasedOnChildren(availableDevicesListView);
 
         if (selectedDevices.isEmpty() ) {
-            selectedDevices.addAll(availableMicrocontrollers);
+            selectedDevices.addAll(devicesList);
             updateModelSelectedDevices();
         }
 
@@ -587,17 +594,5 @@ public class TestsSectionFragment extends BaseSectionFragment {
         selectedDevicesListView.setListItems(selectedDevices);
         selectedDevicesListView.setAdapter(selectedDevicesAdapter);
         setListViewHeightBasedOnChildren(selectedDevicesListView);
-    }
-
-    public void setStatus(String string, boolean busy) {
-        if (status != null) {
-            status.setText(string);
-        }
-        
-        if (busy) {
-            getView().findViewById(R.id.statusProgress).setVisibility(View.VISIBLE);
-        } else {
-            getView().findViewById(R.id.statusProgress).setVisibility(View.GONE);
-        }
     }
 }

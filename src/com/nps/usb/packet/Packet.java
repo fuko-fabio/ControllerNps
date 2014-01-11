@@ -1,8 +1,10 @@
-package com.nps.usb.microcontroller;
+package com.nps.usb.packet;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+
+import com.nps.usb.microcontroller.Command;
 
 /**
  * @author Norbert Pabian

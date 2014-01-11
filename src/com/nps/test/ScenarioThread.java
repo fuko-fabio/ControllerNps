@@ -18,7 +18,7 @@ import com.nps.storage.ExternalStorageException;
 import com.nps.storage.TestResults;
 import com.nps.usb.microcontroller.Microcontroller;
 import com.nps.usb.microcontroller.MicrocontrollerException;
-import com.nps.usb.microcontroller.Packet;
+import com.nps.usb.packet.Packet;
 
 public class ScenarioThread extends Thread {
 

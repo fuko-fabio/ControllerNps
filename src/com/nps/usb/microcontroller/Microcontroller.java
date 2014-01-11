@@ -7,6 +7,9 @@ import android.util.Log;
 
 import com.nps.usb.UsbGate;
 import com.nps.usb.UsbGateException;
+import com.nps.usb.packet.Packet;
+import com.nps.usb.packet.PacketBuilder;
+import com.nps.usb.packet.PacketSize;
 
 /**
  * @author Norbert Pabian www.npsoftware.pl

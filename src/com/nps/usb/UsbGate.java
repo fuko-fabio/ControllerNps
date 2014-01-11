@@ -2,7 +2,7 @@ package com.nps.usb;
 
 import java.nio.ByteBuffer;
 
-import com.nps.usb.microcontroller.Packet;
+import com.nps.usb.packet.Packet;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;

@@ -354,4 +354,12 @@ public class UsbService extends Service {
             Log.w(TAG, "Couldn't ping device: " + deviceName + " Device not exists.");
         }
     }
+
+    public byte[] getLastReceivedPacket(String deviceName) {
+        Microcontroller micro = availableMicrocontrollers.get(deviceName);
+        if(micro != null) {
+            return micro.getLastReceivedStreamPacket();
+        }
+        return null;
+    }
 }

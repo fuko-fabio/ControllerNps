@@ -13,6 +13,10 @@ public enum MemoryUnit {
         this.multiplier = multiplier;
         this.index = index;
     }
+    
+    public int getIndex() {
+        return index;
+    }
 
     public int getMultiplier(){
         return multiplier;
