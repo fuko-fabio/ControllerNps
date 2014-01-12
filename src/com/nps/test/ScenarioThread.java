@@ -29,9 +29,7 @@ public class ScenarioThread extends Thread {
     private final Scenario scenario;
     private final Microcontroller[] microcontrollers;
 
-    private static final int STREAM_QUEUE_SIZE = 10;
-    //private static final int STREAM_BUFFER_RANGE = 8388608; // 8mb
-    //private static final int STREAM_BUFFER_RANGE = 512000; // 500kb
+    private static final int QUEUE_SIZE = 20 * 1024 * 1024; // 20MB
     private final int streamBufferSize;
     private BlockingQueue<byte[]> streamQueue;
     private ByteBuffer streamBuffer;
@@ -52,7 +50,8 @@ public class ScenarioThread extends Thread {
         }
 
         if(scenario.isSaveStreamData()) {
-            streamQueue = new ArrayBlockingQueue<byte[]>(STREAM_QUEUE_SIZE);
+            int queueSize = QUEUE_SIZE / scenario.getStreamBufferSize();
+            streamQueue = new ArrayBlockingQueue<byte[]>(queueSize);
             streamBuffer = ByteBuffer.allocateDirect(streamBufferSize *3);
         }
         if(scenario.getSimulateComputations() > 0) {

@@ -6,13 +6,13 @@ import java.util.List;
 import com.nps.architecture.Hub;
 import com.nps.architecture.Sequence;
 import com.nps.architecture.ThreadPriority;
-import com.nps.micro.model.TestsViewModel;
+import com.nps.micro.model.ViewModel;
 
 public class ScenariosGenerator {
 
-    private TestsViewModel model;
+    private ViewModel model;
 
-    public ScenariosGenerator(TestsViewModel model){
+    public ScenariosGenerator(ViewModel model){
         this.model = model;
     }
 

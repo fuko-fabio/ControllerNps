@@ -10,7 +10,7 @@ import com.nps.storage.Storage;
 /**
  * @author Norbert Pabian www.npsoftware.pl
  */
-public class TestsViewModel {
+public class ViewModel {
 
     private int repeats;
     private short streamOutSize;
@@ -28,8 +28,9 @@ public class TestsViewModel {
     private Storage.Type storageType;
     private int streamBufferSize;
     private MemoryUnit streamBufferUnit;
+    private boolean autoEnableGraph;
 
-    public TestsViewModel() {
+    public ViewModel() {
         super();
         repeats = 10;
         streamOutSize = 16;
@@ -191,5 +192,13 @@ public class TestsViewModel {
 
     public void setStreamBufferUnit(MemoryUnit streamBufferUnit) {
         this.streamBufferUnit = streamBufferUnit;
+    }
+
+    public boolean isAutoEnableGraph() {
+        return autoEnableGraph;
+    }
+
+    public void setAutoEnableGraph(boolean autoEnableGraph) {
+        this.autoEnableGraph = autoEnableGraph;
     }
 }

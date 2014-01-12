@@ -86,9 +86,15 @@
     <string name="ping_device_title">Ping selected device</string>
     <string name="ping_device_info">Do you want ping device: %1$s ?</string>
     <string name="other">Other</string>
-    <string name="time">Time[ms]</string>
+    <string name="time">Time</string>
     <string name="value">Value</string>
     <string name="analog_inputs">Analog Inputs</string>
     <string name="enabled">Enabled</string>
     <string name="disabled">Disabled</string>
+    <string name="auto_enable_graph">Auto Enable/Disable Graph</string>
+    <string name="app_version">Controller nps 1.0.15</string>
+    <string name="built_date">Built date: 12.01.2014</string>
+    <string name="author">Author: Norbert Pabian</string>
+    <string name="contact">Contact: norbert.pabian@gmail.com | www.npsoft.clanteam.com</string>
+    <string name="about">App for testing communication between android device an microconrtollers SAM7-EX256 via USB connection. Microcontrolers require software developed by JAG.</string>
 </resources>

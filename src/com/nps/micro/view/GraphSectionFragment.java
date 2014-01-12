@@ -44,6 +44,7 @@ public class GraphSectionFragment extends BaseSectionFragment {
     private ToggleButton enableButton;
     private Spinner devicesSpinner;
     private boolean enabled = false;
+    private boolean autoEnableGraph = false;
 
     private int currentDeviceIndex = 0;
     private ArrayList<String> devicesList = new ArrayList<String>();
@@ -96,6 +97,12 @@ public class GraphSectionFragment extends BaseSectionFragment {
 
         graphUpdaterThread = new GraphUpdaterThread(analogOneSeries,
                 analogTwoSeries, analogThreeSeries, analogFourSeries);
+    }
+
+    @Override
+    public void onDestroy() {
+        graphUpdaterThread.finalize();
+        super.onDestroy();
     }
 
     public void setOnGraphFragmentListener(GraphFragmentListener listener) {
@@ -165,16 +172,24 @@ public class GraphSectionFragment extends BaseSectionFragment {
     @Override
     public void updateStatus(String status, boolean busy) {
         super.updateStatus(status, busy);
-        if(!busy) {
+        if(autoEnableGraph) {
+            enabled = busy;
+            graphUpdaterThread.pause(!busy);
+            enableButton.setChecked(busy);
+        } else if (!busy) {
             enabled = false;
             graphUpdaterThread.pause(true);
-            enableButton.setChecked(enabled);
+            enableButton.setChecked(false);
         }
+    }
+
+    public void setAutoEnableGraph(boolean autoEnableGraph) {
+        this.autoEnableGraph = autoEnableGraph;
     }
 
     private class GraphUpdaterThread extends Thread {
 
-        private static final int MAX_ITEMS = 100;
+        private static final int MAX_ITEMS = 200;
         private boolean pause = true;
         private boolean run = true;
 
@@ -215,7 +230,7 @@ public class GraphSectionFragment extends BaseSectionFragment {
                     }
                 }
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

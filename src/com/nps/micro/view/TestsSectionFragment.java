@@ -35,7 +35,7 @@ import android.widget.StableArrayAdapter;
 
 import com.nps.architecture.MemoryUnit;
 import com.nps.micro.R;
-import com.nps.micro.model.TestsViewModel;
+import com.nps.micro.model.ViewModel;
 import com.nps.storage.Storage;
 import com.nps.test.Scenario;
 import com.nps.test.ScenariosGenerator;
@@ -43,7 +43,7 @@ import com.nps.test.ScenariosGenerator;
 public class TestsSectionFragment extends BaseSectionFragment {
 
     private TestsFragmentListener listener;
-    private final TestsViewModel model = new TestsViewModel();
+    private final ViewModel model = new ViewModel();
 
     private EditText repeatsInput;
     private Button repeatsButton;
@@ -76,6 +76,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
 
     private EditText simulateEditText;
     private CheckBox fastHub;
+    private CheckBox autoEnableGraphCheckBox;
 
     private Button runButton;
 
@@ -175,7 +176,7 @@ public class TestsSectionFragment extends BaseSectionFragment {
             public void afterTextChanged(Editable s) {
                 String val = s.toString();
                 if(!val.isEmpty() && StringUtils.isNumeric(val)) {
-                    model.setRepeats(Integer.valueOf(s.toString()));
+                    model.setStreamOutSize(Short.valueOf(s.toString()));
                 }
             }
             @Override
@@ -382,10 +383,17 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 model.setFastHub(isChecked);
             }});
 
+        autoEnableGraphCheckBox = (CheckBox) rootView.findViewById(R.id.autoEnableGraphCheckBox);
+        autoEnableGraphCheckBox.setChecked(model.isAutoEnableGraph());
+        autoEnableGraphCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                model.setAutoEnableGraph(isChecked);
+            }});
+
         createSequenceChooser(rootView);
         createDeviceChooser(rootView, runButton);
         updateStatus(rootView);
-        //setAvailableMicrocontrollers(Arrays.asList("/dev/0/", "/dev/1/", "/dev/2/", "/dev/4/"));
         return rootView;
     }
 
@@ -594,5 +602,9 @@ public class TestsSectionFragment extends BaseSectionFragment {
         selectedDevicesListView.setListItems(selectedDevices);
         selectedDevicesListView.setAdapter(selectedDevicesAdapter);
         setListViewHeightBasedOnChildren(selectedDevicesListView);
+    }
+    
+    public boolean isAutoEnableGraph() {
+        return model.isAutoEnableGraph();
     }
 }

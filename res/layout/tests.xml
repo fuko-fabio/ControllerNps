@@ -404,12 +404,25 @@
                 android:id="@+id/line1"
                 layout="@layout/horizontal_line" />
 
-            <CheckBox
-                android:id="@+id/fastHubCheckBox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.40"
-                android:text="@string/fast_hub" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+
+                <CheckBox
+                    android:id="@+id/autoEnableGraphCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.40"
+                    android:text="@string/auto_enable_graph" />
+
+                <CheckBox
+                    android:id="@+id/fastHubCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.40"
+                    android:text="@string/fast_hub" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/runButton"

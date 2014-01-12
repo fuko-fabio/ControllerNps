@@ -380,23 +380,6 @@ public class MainActivity extends FragmentActivity {
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
-            testsFragment = new TestsSectionFragment();
-            testsFragment.setListener(new TestsFragmentListener() {
-
-                @Override
-                public void onRunUsbTest(List<Scenario> scenarios) {
-                    if (microUsbService != null) {
-                        microUsbService.testCommunication(scenarios);
-                    }
-                }
-
-                @Override
-                public void onPingDevice(String deviceName) {
-                    if (microUsbService != null) {
-                        microUsbService.pingDevice(deviceName);
-                    }
-                }
-            });
             graphFragment = new GraphSectionFragment();
             graphFragment.setOnGraphFragmentListener(new GraphFragmentListener() {
                 @Override
@@ -408,6 +391,24 @@ public class MainActivity extends FragmentActivity {
                 }
             });
             aboutFragment = new AboutSectionFragment();
+            testsFragment = new TestsSectionFragment();
+            testsFragment.setListener(new TestsFragmentListener() {
+
+                @Override
+                public void onRunUsbTest(List<Scenario> scenarios) {
+                    if (microUsbService != null) {
+                        microUsbService.testCommunication(scenarios);
+                        graphFragment.setAutoEnableGraph(testsFragment.isAutoEnableGraph());
+                    }
+                }
+
+                @Override
+                public void onPingDevice(String deviceName) {
+                    if (microUsbService != null) {
+                        microUsbService.pingDevice(deviceName);
+                    }
+                }
+            });
             fragments = new BaseSectionFragment[] { testsFragment, graphFragment, aboutFragment };
         }
 

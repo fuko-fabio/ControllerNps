@@ -178,6 +178,11 @@ public class UsbService extends Service {
         notificationManager.cancel(NOTIFICATION);
         statusThread.finalize();
         executorService.shutdown();
+        for( @SuppressWarnings("rawtypes") Future future : futures) {
+            if(!future.isDone()) {
+                future.cancel(false);
+            }
+        }
         isRunning = false;
     }
 
@@ -213,15 +218,16 @@ public class UsbService extends Service {
         status = new Status(getText(R.string.local_service_testing).toString() +
                             ' ' + scenario.getSequence().toString() +
                             ' ' + scenario.getThreadPriority().toString() +
-                            " packet In size: " + scenario.getStreamInSize() +
-                            " on " + scenario.getDevices().length + " devices",
+                            " In packet: " + scenario.getStreamInSize() +
+                            " Out packet: " + scenario.getStreamOutSize() +
+                            " On " + scenario.getDevices().length + " devices",
                             true);
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        
+
         Intent killIntent = new Intent();  
         killIntent.setAction(KILL_ACTION);
-        PendingIntent pendingIntentKill = PendingIntent.getBroadcast(this, 12345, killIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntentKill = PendingIntent.getBroadcast(getApplicationContext(), 12345, killIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                                             .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
