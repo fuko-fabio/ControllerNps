@@ -238,6 +238,12 @@ public class GraphSectionFragment extends BaseSectionFragment {
         }
 
         public void pause(boolean pause) {
+            if(!pause) {
+                analogOneSeries.clear();
+                analogTwoSeries.clear();
+                analogThreeSeries.clear();
+                analogFourSeries.clear();
+            }
             this.pause = pause;
         }
 

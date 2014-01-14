@@ -73,6 +73,10 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private RadioButton internalStorageRadio;
     private EditText streamBufferSizeInput;
     private Spinner memoryUnitSpinner;
+    private RadioGroup radioQueueGroup;
+    private RadioButton autoStreamQueueSizeRadio;
+    private RadioButton manualStreamQueueSizeRadio;
+    private EditText streamQueueSize;
 
     private EditText simulateEditText;
     private CheckBox fastHub;
@@ -83,7 +87,6 @@ public class TestsSectionFragment extends BaseSectionFragment {
     private List<String> devicesList = new ArrayList<String>();
     private final List<String> selectedDevices = new ArrayList<String>();
     private final List<String> selectedSequences = new ArrayList<String>();
-
 
     public TestsSectionFragment() {
         this.layout = R.layout.tests;
@@ -318,6 +321,49 @@ public class TestsSectionFragment extends BaseSectionFragment {
         saveStreamCheckBox.setChecked(model.isSaveStreams());
         streamBufferSizeInput.setEnabled(saveStreamCheckBox.isChecked());
         memoryUnitSpinner.setEnabled(saveStreamCheckBox.isChecked());
+        streamQueueSize = (EditText) rootView.findViewById(R.id.streamQueueSize);
+        streamQueueSize.setText(String.valueOf(model.getStreamQueueSize()));
+        streamQueueSize.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                String val = s.toString();
+                if(!val.isEmpty() && StringUtils.isNumeric(val)) {
+                    model.setStreamQueueSize(Integer.valueOf(s.toString()));
+                }
+            }
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }});
+        streamQueueSize.setEnabled(model.isSaveStreams() && !model.isAutoStreamQueueSize());
+        radioQueueGroup = (RadioGroup) rootView.findViewById(R.id.queueRadioGroup);
+        autoStreamQueueSizeRadio = (RadioButton) rootView.findViewById(R.id.autoBufferRadio);
+        manualStreamQueueSizeRadio = (RadioButton) rootView.findViewById(R.id.manualBufferRadio);
+        if (model.isAutoStreamQueueSize()) {
+            autoStreamQueueSizeRadio.setChecked(true);
+        } else {
+            manualStreamQueueSizeRadio.setChecked(true);
+        }
+        autoStreamQueueSizeRadio.setEnabled(model.isSaveStreams());
+        manualStreamQueueSizeRadio.setEnabled(model.isSaveStreams());
+        radioQueueGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                case R.id.autoBufferRadio:
+                    model.setAutoStreamQueueSize(true);
+                    streamQueueSize.setEnabled(false);
+                    break;
+                case R.id.manualBufferRadio:
+                    model.setAutoStreamQueueSize(false);
+                    streamQueueSize.setEnabled(true);
+                    break;
+                }
+            }
+        });
+
         saveStreamCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -326,8 +372,11 @@ public class TestsSectionFragment extends BaseSectionFragment {
                 internalStorageRadio.setEnabled(model.isSaveStreams() || model.isSaveLogs());
                 streamBufferSizeInput.setEnabled(isChecked);
                 memoryUnitSpinner.setEnabled(isChecked);
+                autoStreamQueueSizeRadio.setEnabled(model.isSaveStreams());
+                manualStreamQueueSizeRadio.setEnabled(model.isSaveStreams());
+                streamQueueSize.setEnabled(model.isSaveStreams() && !model.isAutoStreamQueueSize());
             }});
-        
+
         simulateEditText = (EditText) rootView.findViewById(R.id.simulateComputationsEditText);
         simulateEditText.setText(String.valueOf(model.getSimulateComputations()));
         simulateEditText.addTextChangedListener(new TextWatcher() {

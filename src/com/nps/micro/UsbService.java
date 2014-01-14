@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -175,7 +176,6 @@ public class UsbService extends Service {
     @Override
     public void onDestroy() {
         closeMicrocontrollers();
-        notificationManager.cancel(NOTIFICATION);
         statusThread.finalize();
         executorService.shutdown();
         for( @SuppressWarnings("rawtypes") Future future : futures) {
@@ -183,7 +183,14 @@ public class UsbService extends Service {
                 future.cancel(false);
             }
         }
+        try {
+            executorService.awaitTermination(10, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            Log.e(TAG, "Couldn't finalize tasks cause: " + e.getMessage());
+        }
+        notificationManager.cancel(NOTIFICATION);
         isRunning = false;
+        super.onDestroy();
     }
 
     private void closeMicrocontrollers() {

@@ -38,7 +38,7 @@ public class StreamWriterThread extends Thread {
         while (isRunning) {
             try {
                 byte[] streamData = streamQueue.take();
-                Log.d(TAG, "Writing " + streamData.length + "bytes to file...");
+                //Log.d(TAG, "Writing " + streamData.length + "bytes to file...");
                 fos.write(streamData);
             } catch (InterruptedException e) {
                 Log.e(TAG, "Couldn't get data to write from queue cause: " + e.getMessage());

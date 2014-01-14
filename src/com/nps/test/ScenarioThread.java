@@ -29,7 +29,7 @@ public class ScenarioThread extends Thread {
     private final Scenario scenario;
     private final Microcontroller[] microcontrollers;
 
-    private static final int QUEUE_SIZE = 20 * 1024 * 1024; // 20MB
+    private static final int DEFAULT_QUEUE_SIZE = 20 * 1024 * 1024; // 20MB
     private final int streamBufferSize;
     private BlockingQueue<byte[]> streamQueue;
     private ByteBuffer streamBuffer;
@@ -50,7 +50,12 @@ public class ScenarioThread extends Thread {
         }
 
         if(scenario.isSaveStreamData()) {
-            int queueSize = QUEUE_SIZE / scenario.getStreamBufferSize();
+            int queueSize;
+            if(scenario.getStreamQueueSize() > 0) {
+                queueSize = scenario.getStreamQueueSize();
+            } else {
+                queueSize = DEFAULT_QUEUE_SIZE / scenario.getStreamBufferSize();
+            }
             streamQueue = new ArrayBlockingQueue<byte[]>(queueSize);
             streamBuffer = ByteBuffer.allocateDirect(streamBufferSize *3);
         }
@@ -119,7 +124,7 @@ public class ScenarioThread extends Thread {
         Log.d(TAG, "Test done: Java thread sequence " + scenario.getSequence().name() + " priority: " + scenario.getThreadPriority().name());
     }
 
-    private void switchMicrocontrollersToStreamMode(Microcontroller[] selectedMicrocontrollers,
+    private static void switchMicrocontrollersToStreamMode(Microcontroller[] selectedMicrocontrollers,
             short streamOutSize, short streamInSize) throws MicrocontrollerException {
         for (Microcontroller micro : getUniqueMicrocontrollers(selectedMicrocontrollers)) {
             micro.setStreamParameters(streamOutSize, streamInSize);
@@ -127,7 +132,7 @@ public class ScenarioThread extends Thread {
         }
     }
 
-    private Collection<Microcontroller> getUniqueMicrocontrollers(Microcontroller[] microcontrollers) {
+    private static Collection<Microcontroller> getUniqueMicrocontrollers(Microcontroller[] microcontrollers) {
         Map<String, Microcontroller> map = new HashMap<String, Microcontroller>();
         for(Microcontroller microcontroller : microcontrollers) {
             map.put(microcontroller.getDeviceName(), microcontroller);
@@ -135,7 +140,7 @@ public class ScenarioThread extends Thread {
         return map.values();
     }
 
-    private void switchMicrocontrollersToCommandMode(Microcontroller[] selectedMicrocontrollers)
+    private static void switchMicrocontrollersToCommandMode(Microcontroller[] selectedMicrocontrollers)
             throws MicrocontrollerException {
         for (Microcontroller micro : getUniqueMicrocontrollers(selectedMicrocontrollers)) {
             micro.switchToCommandMode();

@@ -19,6 +19,7 @@ public class Scenario {
     private short simulateComputations;
     private Storage.Type storageType;
     private int streamBufferSize;
+    private int streamQueueSize;
 
     public int getRepeats() {
         return repeats;
@@ -123,5 +124,13 @@ public class Scenario {
 
     public void setStreamBufferSize(int streamBufferSize) {
         this.streamBufferSize = streamBufferSize;
+    }
+
+    public int getStreamQueueSize() {
+        return streamQueueSize;
+    }
+
+    public void setStreamQueueSize(int streamQueueSize) {
+        this.streamQueueSize = streamQueueSize;
     }
 }

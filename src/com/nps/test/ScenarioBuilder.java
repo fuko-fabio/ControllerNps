@@ -19,6 +19,7 @@ public class ScenarioBuilder {
     private short simulateComputations;
     private Storage.Type storageType;
     private int streamBufferSize;
+    private int streamQueueSize;
 
     public ScenarioBuilder withRepeats(int repeats) {
         this.repeats = repeats;
@@ -80,6 +81,11 @@ public class ScenarioBuilder {
         return this;
     }
 
+    public ScenarioBuilder withStreamQueueSize(int streamQueueSize) {
+        this.streamQueueSize = streamQueueSize;
+        return this;
+    }
+
     public Scenario build() {
         Scenario scenario = new Scenario();
         scenario.setDevices(devices);
@@ -94,6 +100,7 @@ public class ScenarioBuilder {
         scenario.setHub(hub);
         scenario.setStreamBufferSize(streamBufferSize);
         scenario.setStorageType(storageType);
+        scenario.setStreamQueueSize(streamQueueSize);
         return scenario;
     }
 }

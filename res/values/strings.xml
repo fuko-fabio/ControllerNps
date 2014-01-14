@@ -68,7 +68,7 @@
     <string name="save_stream_data">Save stream data to file</string>
     <string name="simulate">Simulate Computations</string>
     <string name="extended_devices">Extended Devices Combination</string>
-    <string name="fast_hub">Fast Usb hub</string>
+    <string name="fast_hub">Fast Usb Hub</string>
     <string name="status">Status: </string>
     <string name="internal">Internal Memory</string>
     <string name="external">External Memory</string>
@@ -90,7 +90,12 @@
     <string name="value">Value</string>
     <string name="analog_inputs">Analog Inputs</string>
     <string name="enabled">Enabled</string>
+    <string name="stream_buffer">Stream Buffer/Queue Settings</string>
     <string name="disabled">Disabled</string>
+    <string name="auto">Auto ~20MB</string>
+    <string name="manual">Buffer Size * Queue Size</string>
+    <string name="queue_size">Stream Queue Size</string>
+    <string name="queue_capacity">Queue Size (size > 0)</string>
     <string name="auto_enable_graph">Auto Enable/Disable Graph</string>
     <string name="app_version">Controller nps 1.0.15</string>
     <string name="built_date">Built date: 12.01.2014</string>

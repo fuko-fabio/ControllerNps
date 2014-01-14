@@ -2,6 +2,7 @@ package com.nps.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -66,10 +67,15 @@ public class StatusThread extends Thread {
                 if(future.get() == null ) {
                     toRemove.add(future);
                 }
+            } catch (CancellationException e) {
+                Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
+                toRemove.add(future);
             } catch (InterruptedException e) {
                 Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
+                toRemove.add(future);
             } catch (ExecutionException e) {
                 Log.d(TAG, "Couldn't wait for threads cause: " + e.getMessage());
+                toRemove.add(future);
             }
         }
         futures.removeAll(toRemove);

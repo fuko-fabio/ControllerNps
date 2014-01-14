@@ -74,7 +74,8 @@ public class ScenariosGenerator {
                 .isSaveSpeedLogs(model.isSaveLogs())
                 .isSaveStreamData(model.isSaveStreams())
                 .withSimulateComputations(model.getSimulateComputations())
-                .withStorageType(model.getStorageType()).build();
+                .withStorageType(model.getStorageType())
+                .withStreamQueueSize(model.isAutoStreamQueueSize() ? 0 : model.getStreamQueueSize()).build();
     }
 
     private String[] clearPostfixes(String[] devices) {

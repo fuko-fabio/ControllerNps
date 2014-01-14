@@ -29,6 +29,8 @@ public class ViewModel {
     private int streamBufferSize;
     private MemoryUnit streamBufferUnit;
     private boolean autoEnableGraph;
+    private boolean autoStreamQueueSize;
+    private int streamQueueSize;
 
     public ViewModel() {
         super();
@@ -46,8 +48,11 @@ public class ViewModel {
         simulateComputations = 0;
         fastHub = false;
         storageType = Storage.Type.EXTERNAL;
-        setStreamBufferSize(500);
-        setStreamBufferUnit(MemoryUnit.KB);
+        streamBufferSize = 500;
+        streamBufferUnit = MemoryUnit.KB;
+        autoEnableGraph = false;
+        autoStreamQueueSize = true;
+        streamQueueSize = 10;
     }
 
     public int getRepeats() {
@@ -200,5 +205,21 @@ public class ViewModel {
 
     public void setAutoEnableGraph(boolean autoEnableGraph) {
         this.autoEnableGraph = autoEnableGraph;
+    }
+
+    public boolean isAutoStreamQueueSize() {
+        return autoStreamQueueSize;
+    }
+
+    public void setAutoStreamQueueSize(boolean autoStreamQueueSize) {
+        this.autoStreamQueueSize = autoStreamQueueSize;
+    }
+
+    public int getStreamQueueSize() {
+        return streamQueueSize;
+    }
+
+    public void setStreamQueueSize(int streamQueueSize) {
+        this.streamQueueSize = streamQueueSize;
     }
 }

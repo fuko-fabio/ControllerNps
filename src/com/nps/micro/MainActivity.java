@@ -243,7 +243,7 @@ public class MainActivity extends FragmentActivity {
             requestPermisionForDevice();
         } else {
             Log.d(TAG, "Cannot find target USB device");
-            //Dialogs.getUsbDeviceNotFoundDialog(this).show();
+            Dialogs.getUsbDeviceNotFoundDialog(this).show();
         }
     }
 
