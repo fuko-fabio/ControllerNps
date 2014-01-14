@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2014 Norbert Pabian.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * imitations under the License.
+ ******************************************************************************/
 package com.nps.test;
 
 import java.nio.ByteBuffer;
@@ -20,6 +35,10 @@ import com.nps.usb.microcontroller.Microcontroller;
 import com.nps.usb.microcontroller.MicrocontrollerException;
 import com.nps.usb.packet.Packet;
 
+/**
+ * @author Norbert Pabian
+ * www.npsoft.clanteam.com
+ */
 public class ScenarioThread extends Thread {
 
     private static final String TAG = "ScenarioThread";
@@ -35,7 +54,7 @@ public class ScenarioThread extends Thread {
     private ByteBuffer streamBuffer;
     private StreamWriterThread streamWriterThread;
     
-    private static final int FAKE_ARRAY_SIZE = 3000; // ~0.3ms
+    private static final int FAKE_ARRAY_SIZE = 3000;
     private double fakeDataArray0[] = new double[FAKE_ARRAY_SIZE];
     private double fakeDataArray1[] = new double[FAKE_ARRAY_SIZE];
 
@@ -462,6 +481,7 @@ public class ScenarioThread extends Thread {
         }
     }
 
+    // ~0.3ms
     private double calculateFakeData(short computationsMultiplier) {
         double sum = 0;
         for (int i = 0; i < computationsMultiplier; i++) {
