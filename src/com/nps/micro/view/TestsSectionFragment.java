@@ -48,12 +48,12 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.StableArrayAdapter;
 
-import com.nps.architecture.MemoryUnit;
+import com.nps.common.MemoryUnit;
 import com.nps.micro.R;
 import com.nps.micro.model.ViewModel;
+import com.nps.scenario.Scenario;
+import com.nps.scenario.ScenariosGenerator;
 import com.nps.storage.Storage;
-import com.nps.test.Scenario;
-import com.nps.test.ScenariosGenerator;
 
 /**
  * @author Norbert Pabian

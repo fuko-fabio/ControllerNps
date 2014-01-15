@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * imitations under the License.
  ******************************************************************************/
-package com.nps.test;
+package com.nps.scenario;
 
-import com.nps.architecture.Hub;
 import com.nps.architecture.Sequence;
 import com.nps.architecture.ThreadPriority;
+import com.nps.common.Hub;
 import com.nps.storage.Storage;
 
 /**

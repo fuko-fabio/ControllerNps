@@ -21,10 +21,12 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
+
 import com.nps.micro.R;
-import com.nps.test.Scenario;
+import com.nps.scenario.Scenario;
 
 /**
  * @author Norbert Pabian

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * imitations under the License.
  ******************************************************************************/
-package com.nps.architecture;
+package com.nps.common;
 
 
 public enum MemoryUnit {

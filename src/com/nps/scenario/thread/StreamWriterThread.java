@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * imitations under the License.
  ******************************************************************************/
-package com.nps.test;
+package com.nps.scenario.thread;
 
 import java.io.File;
 import java.io.FileNotFoundException;

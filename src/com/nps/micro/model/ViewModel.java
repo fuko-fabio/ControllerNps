@@ -18,8 +18,8 @@ package com.nps.micro.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.nps.architecture.MemoryUnit;
 import com.nps.architecture.Sequence;
+import com.nps.common.MemoryUnit;
 import com.nps.storage.Storage;
 
 /**

@@ -15,7 +15,7 @@
  ******************************************************************************/
 package com.nps.storage;
 
-import com.nps.test.Scenario;
+import com.nps.scenario.Scenario;
 
 /**
  * @author Norbert Pabian

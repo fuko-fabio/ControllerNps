@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * imitations under the License.
  ******************************************************************************/
-package com.nps.test;
+package com.nps.scenario.thread;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -28,6 +28,7 @@ import android.util.Log;
 import com.nps.architecture.Sequence.Group;
 import com.nps.architecture.ThreadPriority;
 import com.nps.micro.UsbService;
+import com.nps.scenario.Scenario;
 import com.nps.storage.ExternalStorage;
 import com.nps.storage.ExternalStorageException;
 import com.nps.storage.TestResults;

@@ -55,7 +55,7 @@ import com.nps.micro.view.GraphFragmentListener;
 import com.nps.micro.view.GraphSectionFragment;
 import com.nps.micro.view.TestsFragmentListener;
 import com.nps.micro.view.TestsSectionFragment;
-import com.nps.test.Scenario;
+import com.nps.scenario.Scenario;
 import com.nps.usb.DeviceIds;
 
 /**

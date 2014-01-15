@@ -17,7 +17,7 @@ package com.nps.micro.view;
 
 import java.util.List;
 
-import com.nps.test.Scenario;
+import com.nps.scenario.Scenario;
 
 /**
  * @author Norbert Pabian

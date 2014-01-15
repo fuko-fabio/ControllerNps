@@ -45,10 +45,10 @@ import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.nps.scenario.Scenario;
+import com.nps.scenario.thread.ScenarioThread;
+import com.nps.scenario.thread.StatusThread;
 import com.nps.storage.ExternalStorage;
-import com.nps.test.Scenario;
-import com.nps.test.ScenarioThread;
-import com.nps.test.StatusThread;
 import com.nps.usb.UsbGateException;
 import com.nps.usb.microcontroller.Microcontroller;
 import com.nps.usb.microcontroller.MicrocontrollerException;
