@@ -16,11 +16,11 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="#000"
+    android:background="#000C10"
     android:textSize="@dimen/list_text_size"
     android:gravity="center_vertical"
     android:paddingLeft="15dp"
     android:paddingRight="15dp"
     android:minHeight="@dimen/list_item_height"
-    android:textColor="#EEE"
+    android:textColor="#FFF"
 />
