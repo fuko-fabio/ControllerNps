@@ -13,30 +13,13 @@
  * See the License for the specific language governing permissions and
  * imitations under the License.
  ******************************************************************************/
-package com.nps.micro;
-
-import android.os.Bundle;
-import android.preference.PreferenceActivity;
-
-import com.nps.micro.view.UserPreferenceFragment;
+package com.nps.micro.view;
 
 /**
  * @author Norbert Pabian
  * www.npsoft.clanteam.com
  */
-public class UserPreferenceActivity extends PreferenceActivity {
+public interface AboutFragmentListener {
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-     super.onCreate(savedInstanceState);
-
-     getFragmentManager().beginTransaction().replace(android.R.id.content,
-                   new UserPreferenceFragment()).commit();
-    }
-
-    @Override
-    public void onBackPressed() {
-        this.setResult(RESULT_OK, getIntent());
-        this.finish();
-    }
+    public void openSettings();
 }

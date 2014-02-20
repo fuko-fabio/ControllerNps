@@ -17,7 +17,9 @@ package com.nps.micro.view;
 
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import com.nps.micro.R;
 
@@ -27,6 +29,14 @@ import com.nps.micro.R;
  */
 public class AboutSectionFragment extends BaseSectionFragment {
 
+    private Button settingsButton;
+ 
+    private AboutFragmentListener listener;
+
+    public void setListener( AboutFragmentListener listener) {
+        this.listener = listener;
+    }
+
     public AboutSectionFragment() {
         this.layout = R.layout.about;
     }
@@ -34,6 +44,17 @@ public class AboutSectionFragment extends BaseSectionFragment {
     @Override
     protected View buildRootView(LayoutInflater inflater, ViewGroup container) {
         View rootView = inflater.inflate(layout, container, false);
+
+        settingsButton = (Button) rootView.findViewById(R.id.buttonSettings);
+        settingsButton.setOnClickListener(new OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.openSettings();
+                }
+            }
+        });
+
         updateStatus(rootView);
         return rootView;
     }

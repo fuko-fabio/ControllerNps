@@ -51,6 +51,7 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 
 import com.nps.micro.UsbService.Status;
+import com.nps.micro.view.AboutFragmentListener;
 import com.nps.micro.view.AboutSectionFragment;
 import com.nps.micro.view.BaseSectionFragment;
 import com.nps.micro.view.Dialogs;
@@ -414,6 +415,9 @@ public class MainActivity extends FragmentActivity {
         case R.id.action_settings:
             openApplicationSettings();
             return true;
+        case R.id.action_exit:
+            openApplicationSettings();
+            return true;
         default:
             return super.onOptionsItemSelected(item);
         }
@@ -461,9 +465,14 @@ public class MainActivity extends FragmentActivity {
                 }
             });
             aboutFragment = new AboutSectionFragment();
+            aboutFragment.setListener(new AboutFragmentListener() {
+                @Override
+                public void openSettings() {
+                    openApplicationSettings();
+                }
+            });
             testsFragment = new TestsSectionFragment();
             testsFragment.setListener(new TestsFragmentListener() {
-
                 @Override
                 public void runUsbTest(List<Scenario> scenarios) {
                     if (microUsbService != null) {

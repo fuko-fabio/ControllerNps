@@ -5,6 +5,7 @@
     <string name="logs_catalog">ControllerUsbLogs</string>
     <string name="bins_catalog">ControllerUsbBins</string>
     <string name="action_settings">Settings</string>
+    <string name="action_exit">Exit</string>
     <string name="title_about">About</string>
     <string name="title_tests">Tests</string>
     <string name="title_graph">Graph</string>
@@ -94,8 +95,8 @@
     <string name="queue_size">Stream Queue Size</string>
     <string name="queue_capacity">Queue Size (size > 0)</string>
     <string name="auto_enable_graph">Auto Enable/Disable Graph</string>
-    <string name="app_version">Controller nps 1.0.15</string>
-    <string name="built_date">Built date: 12.01.2014</string>
+    <string name="app_version">Controller nps 1.0.17</string>
+    <string name="built_date">Built date: 20.02.2014</string>
     <string name="author">Author: Norbert Pabian</string>
     <string name="contact">Contact: norbert.pabian@gmail.com | www.npsoft.clanteam.com</string>
     <string name="about">App for testing communication between android device an microconrtollers SAM7-EX256 via USB connection. Microcontrolers require software developed by JAG.</string>
@@ -104,14 +105,14 @@
     <string name="vid">Vendor ID</string>
     <string name="pref_summary">List with supported device identifiers</string>
     <string name="pref_title">Devices Settings</string>
-    <string name="pref_dev_predefined">Predefined</string>
-    <string name="pref_dev_custom">Custom</string>
+    <string name="pref_dev_predefined">Predefined Devices</string>
+    <string name="pref_dev_custom">Custom Devices</string>
     <string name="atmel1_dev_title">Atmel (sam7)</string>
     <string name="atmel1_dev_summary">PID = 24870, VID = 1003</string>
     <string name="atmel2_dev_title">Atmel (sam3)</string>
     <string name="atmel2_dev_summary">PID = 24857, VID = 1003</string>
     <string name="stm_dev_title">STM</string>
-    <string name="stm_dev_summary">PID = x, VID = 1003</string>
+    <string name="stm_dev_summary">PID = 25869, VID = 1003</string>
     <string name="custom1_dev_title">Custom 1</string>
     <string name="custom2_dev_title">Custom 2</string>
     <string name="custom3_dev_title">Custom 3</string>
