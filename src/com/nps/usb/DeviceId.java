@@ -15,6 +15,7 @@
  ******************************************************************************/
 package com.nps.usb;
 
+import android.hardware.usb.UsbDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -22,7 +23,7 @@ import android.os.Parcelable;
  * @author Norbert Pabian
  * www.npsoft.clanteam.com
  */
-public class DeviceIds implements Parcelable {
+public class DeviceId implements Parcelable {
 	
     protected String name;
     protected int productId;
@@ -46,6 +47,11 @@ public class DeviceIds implements Parcelable {
         return 0;
     }
 
+    public boolean equals(UsbDevice device) {
+        return device.getProductId() == productId
+               && device.getVendorId() == vendorId;
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(name);
@@ -53,23 +59,23 @@ public class DeviceIds implements Parcelable {
         dest.writeInt(vendorId);
     }
 
-    public static final Parcelable.Creator<DeviceIds> CREATOR = new Parcelable.Creator<DeviceIds>() {
-        public DeviceIds createFromParcel(Parcel in) {
-            return new DeviceIds(in);
+    public static final Parcelable.Creator<DeviceId> CREATOR = new Parcelable.Creator<DeviceId>() {
+        public DeviceId createFromParcel(Parcel in) {
+            return new DeviceId(in);
         }
 
-        public DeviceIds[] newArray(int size) {
-            return new DeviceIds[size];
+        public DeviceId[] newArray(int size) {
+            return new DeviceId[size];
         }
     };
 
-    public DeviceIds(String name, int productId, int vendorId) {
+    public DeviceId(String name, int productId, int vendorId) {
         this.name = name;
         this.productId = productId;
         this.vendorId = vendorId;
     }
     
-    private DeviceIds(Parcel in) {
+    private DeviceId(Parcel in) {
         this.name = in.readString();
         this.productId = in.readInt();
         this.vendorId = in.readInt();

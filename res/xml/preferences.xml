@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:summary="@string/pref_summary"
+    android:title="@string/pref_title" >
+
+    <PreferenceCategory
+        android:key="pref_dev_predefined"
+        android:title="@string/pref_dev_predefined" >
+        <CheckBoxPreference
+            android:key="atmel1_dev"
+            android:defaultValue="true"
+            android:summary="@string/atmel1_dev_summary"
+            android:title="@string/atmel1_dev_title" >
+        </CheckBoxPreference>
+        <CheckBoxPreference
+            android:key="atmel2_dev"
+            android:summary="@string/atmel2_dev_summary"
+            android:title="@string/atmel2_dev_title" >
+        </CheckBoxPreference>
+        <CheckBoxPreference
+            android:key="stm_dev"
+            android:defaultValue="true"
+            android:summary="@string/stm_dev_summary"
+            android:title="@string/stm_dev_title" >
+        </CheckBoxPreference>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="pref_dev_custom"
+        android:title="@string/pref_dev_custom" >
+        <CheckBoxPreference
+            android:key="custom1_dev"
+            android:title="@string/custom1_dev_title" >
+        </CheckBoxPreference>
+        <com.nps.micro.view.EditTextPreference 
+            android:dependency="custom1_dev"
+            android:inputType="number"
+            android:key="custom1_dev_pid"
+            android:title="@string/pid"/>
+        <com.nps.micro.view.EditTextPreference 
+            android:dependency="custom1_dev"
+            android:inputType="number"
+            android:key="custom1_dev_vid"
+            android:title="@string/vid"/>
+
+        <CheckBoxPreference
+            android:key="custom2_dev"
+            android:title="@string/custom2_dev_title" >
+        </CheckBoxPreference>
+        <com.nps.micro.view.EditTextPreference 
+            android:dependency="custom2_dev"
+            android:inputType="number"
+            android:key="custom2_dev_pid"
+            android:title="@string/pid"/>
+        <com.nps.micro.view.EditTextPreference 
+            android:dependency="custom2_dev"
+            android:inputType="number"
+            android:key="custom2_dev_vid"
+            android:title="@string/vid"/>
+        
+        <CheckBoxPreference
+            android:key="custom3_dev"
+            android:title="@string/custom3_dev_title" >
+        </CheckBoxPreference>
+        <com.nps.micro.view.EditTextPreference 
+            android:dependency="custom3_dev"
+            android:inputType="number"
+            android:key="custom3_dev_pid"
+            android:title="@string/pid"/>
+        <com.nps.micro.view.EditTextPreference 
+            android:dependency="custom3_dev"
+            android:inputType="number"
+            android:key="custom3_dev_vid"
+            android:title="@string/vid"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
@@ -38,6 +39,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -45,6 +47,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.WindowManager;
 
 import com.nps.micro.UsbService.Status;
@@ -56,7 +59,10 @@ import com.nps.micro.view.GraphSectionFragment;
 import com.nps.micro.view.TestsFragmentListener;
 import com.nps.micro.view.TestsSectionFragment;
 import com.nps.scenario.Scenario;
-import com.nps.usb.DeviceIds;
+import com.nps.usb.AtmelSam3DeviceId;
+import com.nps.usb.AtmelSam7DeviceId;
+import com.nps.usb.DeviceId;
+import com.nps.usb.STM32DeviceId;
 
 /**
  * @author Norbert Pabian
@@ -67,6 +73,7 @@ public class MainActivity extends FragmentActivity {
     public static final String PACKAGE = "com.nps.micro";
     private static final String ACTION_USB_PERMISSION = PACKAGE + ".USB_PERMISSION";
     private static final String TAG = "MainActivity";
+    private static final int USER_PREFERENCES = 123;
 
     private UsbService microUsbService;
 
@@ -74,8 +81,7 @@ public class MainActivity extends FragmentActivity {
     private Messenger messengerService;
     private boolean isDeviceAvailable = false;
     private boolean isBoundToService;
-    // private DeviceIds deviceIds = new DeviceIds("Olimex sam3", 24857, 1003);
-    private DeviceIds deviceIds = new DeviceIds("Olimex sam7", 24870, 1003);
+    private List<DeviceId> deviceIds = new ArrayList<DeviceId>();
 
     List<UsbDevice> devices = new ArrayList<UsbDevice>();
     List<UsbDevice> devicesWithoutPermisions = new ArrayList<UsbDevice>();
@@ -209,11 +215,33 @@ public class MainActivity extends FragmentActivity {
         usbDisconnectedBroadcastReceiver = new UsbDisconnectedBroadcastReceiver(this);
         registerReceiver(usbDisconnectedBroadcastReceiver, new IntentFilter(
                 UsbManager.ACTION_USB_DEVICE_DETACHED));
+
         initUsbService();
+    }
+
+    private void initSupportedDeviceIds() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if(prefs.getBoolean("atmel1_dev", false)) {
+            deviceIds.add(new AtmelSam7DeviceId());
+        }
+        if(prefs.getBoolean("atmel2_dev", false)) {
+            deviceIds.add(new AtmelSam3DeviceId());
+        }
+        if(prefs.getBoolean("stm_dev", false)) {
+            deviceIds.add(new STM32DeviceId());
+        }
+        for(int i=1; i <= 3; i++) {
+            if(prefs.getBoolean("custom" + i +"_dev", false)) {
+                deviceIds.add(new DeviceId("Custom",
+                                           Integer.valueOf(prefs.getString("custom" + i +"_dev_pid", "0")),
+                                           Integer.valueOf(prefs.getString("custom" + i +"_dev_vid", "0"))));
+            }
+        }
     }
 
     private void initUsbService() {
         usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        initSupportedDeviceIds();
         initUsbDevices();
     }
 
@@ -233,11 +261,12 @@ public class MainActivity extends FragmentActivity {
         if (device == null) {
             return false;
         }
-        if (device.getProductId() == deviceIds.getProductId()
-                && device.getVendorId() == deviceIds.getVendorId()) {
-            for (int i = 0; i < device.getInterfaceCount(); i++) {
-                if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA) {
-                    return true;
+        for (DeviceId devId : deviceIds) {
+            if (devId.equals(device)) {
+                for (int i = 0; i < device.getInterfaceCount(); i++) {
+                    if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA) {
+                        return true;
+                    }
                 }
             }
         }
@@ -376,6 +405,32 @@ public class MainActivity extends FragmentActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+        case R.id.action_settings:
+            openApplicationSettings();
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void openApplicationSettings() {
+        Intent i = new Intent(this, UserPreferenceActivity.class);
+        startActivityForResult(i, USER_PREFERENCES);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == USER_PREFERENCES) {
+            if (resultCode == RESULT_OK) {
+                Dialogs.getSettingsChangedDialog(this).show();
+            }
+        }
     }
 
     /**

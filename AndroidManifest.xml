@@ -37,6 +37,8 @@
 <!--                 android:resource="@xml/olimex_sam7s" /> -->
         </activity>
 
+        <activity android:name="com.nps.micro.UserPreferenceActivity"></activity>
+
         <service
             android:name="UsbService"
             android:icon="@drawable/ic_launcher"
